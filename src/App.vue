@@ -1,6 +1,7 @@
 <template>
   <div class="wrap flex overflow-hidden">
     <div class="h-full flex-grow flex flex-col">
+      <mobile-menu class="block lg:hidden" />
       <div :style="{
         'max-height': displayHeight,
         'height': displayHeight,
@@ -9,34 +10,40 @@
       }">
         <display v-if="showDisplay" class="w-full h-full" />
       </div>
-      <div
+      <bottom-bar
         ref="bottomBar"
-        class="bg-gray-400 hidden lg:block"
+        class="hidden lg:block"
         :style="{
           'height': desiredBottomBarHeight,
           'min-height': desiredBottomBarHeight
         }"
-      ></div>
+      ></bottom-bar>
     </div>
-    <div
+    <side-bar
       ref="sideBar"
-      class="border-l-2 border-gray hidden lg:block"
+      class="hidden lg:block"
       :style="{
         'width': desiredSideBarWidth,
         'min-width': desiredSideBarWidth
       }"
     >
-    </div>
+    </side-bar>
   </div>
 </template>
 
 <script>
 import display from './components/display'
+import SideBar from './components/sideBar'
+import BottomBar from './components/bottomBar'
+import MobileMenu from './components/mobileMenu'
 
 export default {
   name: 'App',
   components: {
-    display
+    display,
+    SideBar,
+    BottomBar,
+    MobileMenu
   },
   data: () => ({
     desiredBottomBarHeight: '10rem',
@@ -67,8 +74,8 @@ export default {
   },
   methods: {
     handleResize() {
-      this.currentBottomBarHeight = this.$refs.bottomBar.clientHeight
-      this.currentSideBarWidth = this.$refs.sideBar.clientWidth
+      this.currentBottomBarHeight = this.$refs.bottomBar.$el.clientHeight
+      this.currentSideBarWidth = this.$refs.sideBar.$el.clientWidth
     }
   }
 }
