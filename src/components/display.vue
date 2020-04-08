@@ -4,6 +4,8 @@
 
 <script>
 import * as THREE from 'three'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+
 export default {
   mounted() {
     this.init()
@@ -17,6 +19,7 @@ export default {
     camera: null,
     scene: null,
     renderer: null,
+    controls: null,
     data: [],
   }),
   methods: {
@@ -27,7 +30,6 @@ export default {
         0.01,
         10
       );
-      this.camera.position.z = 5;
   
       this.scene = new THREE.Scene();
       this.addCube()
@@ -39,6 +41,9 @@ export default {
         this.$refs.display.clientHeight
       )
       this.$refs.display.appendChild(this.renderer.domElement);
+      this.controls = new OrbitControls(this.camera, this.renderer.domElement)
+      this.camera.position.set( 0, 0, 5 );
+      this.controls.update();
     },
     handleResize() {
       const canvas = this.renderer.domElement;
@@ -69,7 +74,7 @@ export default {
       });
 
       this.renderer.render(this.scene, this.camera);
-
+      this.controls.update();
       requestAnimationFrame(this.render);
     },
     addCube() {
@@ -85,4 +90,7 @@ export default {
 </script>
 
 <style>
+canvas {
+  outline: none;
+}
 </style>
