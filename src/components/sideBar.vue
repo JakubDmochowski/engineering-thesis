@@ -1,5 +1,10 @@
 <template>
-  <div class="shadow"></div>
+  <div class="shadow p-4">
+    <h1 v-text="$tr('sidebar.filters') + ':'" />
+    <div class="flex">
+      
+    </div>
+  </div>
 </template>
 
 <script>

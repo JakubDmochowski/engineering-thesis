@@ -4,6 +4,9 @@ import App from './App.vue'
 import './assets/styles/index.css'
 import '@fortawesome/fontawesome-free/css/all.css'
 
+import globalMixin from './mixins/global'
+
+
 import upperFirst from 'lodash/upperFirst'
 import camelCase from 'lodash/camelCase'
 
@@ -28,6 +31,8 @@ requireComponent.keys().forEach(fileName => {
     componentConfig.default || componentConfig
   )
 })
+
+Vue.mixin(globalMixin)
 
 Vue.config.productionTip = false
 
