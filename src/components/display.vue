@@ -1,50 +1,33 @@
 <template>
-  <div ref="display"></div>
+  <div ref="display">
+    <div id="tooltip" ref="tooltip">
+      asdf
+      <div id="arrow" data-popper-arrow></div>
+    </div>
+  </div>
 </template>
 
 <script>
-import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import DisplayManager from '../logic/displayManager'
 
 export default {
   mounted() {
-    this.init()
-    this.render()
+    this.displayManager = new DisplayManager(
+      this.$refs.display,
+      this.$refs.tooltip
+    )
+    this.displayManager.init()
     window.addEventListener('resize', this.handleResize)
+    window.addEventListener('click', this.displayManager.handleClick.bind(this.displayManager))
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.handleResize)
+    window.removeEventListener('click', this.displayManager.handleClick.bind(this.displayManager))
   },
   data: () => ({
-    camera: null,
-    scene: null,
-    renderer: null,
-    controls: null,
-    data: [],
+    displayManager: null
   }),
   methods: {
-    init() {
-      this.camera = new THREE.PerspectiveCamera(
-        70,
-        this.$refs.display.clientWidth / this.$refs.display.clientHeight,
-        0.01,
-        10
-      );
-  
-      this.scene = new THREE.Scene();
-      this.addCube()
-      this.addCube()
-
-      this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      this.renderer.setSize(
-        this.$refs.display.clientWidth,
-        this.$refs.display.clientHeight
-      )
-      this.$refs.display.appendChild(this.renderer.domElement);
-      this.controls = new OrbitControls(this.camera, this.renderer.domElement)
-      this.camera.position.set( 0, 0, 5 );
-      this.controls.update();
-    },
     handleResize() {
       const canvas = this.renderer.domElement;
       const width = canvas.clientWidth;
@@ -57,33 +40,6 @@ export default {
         )
       }
       return needResize;
-    },
-    render(time) {
-      time *= 0.001;
-      const canvas = this.renderer.domElement;
-      this.camera.aspect = canvas.clientWidth / canvas.clientHeight;
-      this.camera.updateProjectionMatrix();
-
-      this.data.forEach((obj, ndx) => {
-        const speed = .1 + ndx * .05;
-        const rot = time * speed;
-        obj.rotation.x = rot;
-        obj.rotation.y = rot;
-        // obj.onRender()
-        // console.log(ndx)
-      });
-
-      this.renderer.render(this.scene, this.camera);
-      this.controls.update();
-      requestAnimationFrame(this.render);
-    },
-    addCube() {
-      let geometry = new THREE.BoxGeometry();
-      let material = new THREE.MeshNormalMaterial({ color: 0x00ff00 });
-  
-      let mesh = new THREE.Mesh(geometry, material);
-      this.scene.add(mesh);
-      this.data.push(mesh)
     }
   }
 }
@@ -92,5 +48,36 @@ export default {
 <style>
 canvas {
   outline: none;
+}
+#tooltip {
+  @apply hidden bg-gray-200 shadow rounded-md p-2;
+}
+#tooltip[data-show] {
+  @apply block;
+}
+#tooltip[data-popper-placement^='top'] > #arrow {
+  bottom: -4px;
+}
+#tooltip[data-popper-placement^='bottom'] > #arrow {
+  top: -4px;
+}
+#tooltip[data-popper-placement^='left'] > #arrow {
+  right: -4px;
+}
+#tooltip[data-popper-placement^='right'] > #arrow {
+  left: -4px;
+}
+#arrow,
+#arrow::before {
+  @apply absolute;
+  width: 8px;
+  height: 8px;
+  z-index: -1;
+}
+
+#arrow::before {
+  content: '';
+  transform: rotate(45deg);
+  @apply bg-gray-200;
 }
 </style>

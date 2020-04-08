@@ -6,7 +6,6 @@ import '@fortawesome/fontawesome-free/css/all.css'
 
 import globalMixin from './mixins/global'
 
-
 import upperFirst from 'lodash/upperFirst'
 import camelCase from 'lodash/camelCase'
 

@@ -47,7 +47,7 @@ export default {
   },
   data: () => ({
     desiredBottomBarHeight: '10rem',
-    desiredSideBarWidth: '20rem',
+    desiredSideBarWidth: '15rem',
     currentBottomBarHeight: 0,
     currentSideBarWidth: 0,
     showDisplay: false,
