@@ -1,3 +1,8 @@
 export default {
-  'sidebar.filters': 'Filters'
+  sidebar: {
+    filters: {
+      label: 'Filters',
+      show_detector: 'Show detector',
+    }
+  }
 }

@@ -1,6 +1,6 @@
 <template>
   <div class="shadow p-4">
-    <h1 v-text="$tr('sidebar.filters') + ':'" />
+    <h1 v-text="$tr('sidebar.filters.label') + ':'" />
     <div class="flex">
       
     </div>
