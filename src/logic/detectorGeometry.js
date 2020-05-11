@@ -3,7 +3,7 @@ import * as THREE from 'three'
 class DetectorGeometry {
   constructor(scene) {
     // Placeholder
-    let geometry = new THREE.CylinderGeometry(500, 500, 800, 16, 1, true)
+    let geometry = new THREE.CylinderGeometry(500, 500, 900, 16, 1, true)
     let material = new THREE.MeshBasicMaterial({
       color: 0x000000,
       wireframe: true,
