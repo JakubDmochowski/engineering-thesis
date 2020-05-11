@@ -29,12 +29,12 @@ export default {
   }),
   methods: {
     handleResize() {
-      const canvas = this.renderer.domElement;
+      const canvas = this.displayManager.renderer.domElement;
       const width = canvas.clientWidth;
       const height = canvas.clientHeight;
       const needResize = this.$refs.display.clientWidth !== width || this.$refs.display.clientHeight !== height;
       if (needResize) {
-        this.renderer.setSize(
+        this.displayManager.renderer.setSize(
           this.$refs.display.clientWidth,
           this.$refs.display.clientHeight
         )

@@ -20,6 +20,7 @@ class DisplayManager {
     const near = 0.1
     const far = 20000
     this.camera = new THREE.PerspectiveCamera(fov,aspect,near,far)
+    this.camera.layers.enableAll();
 
     this.scene = new THREE.Scene()
     new DetectorGeometry(this.scene)
@@ -40,7 +41,6 @@ class DisplayManager {
     this.pickHelper.pick(event, this.renderer.domElement, this.scene, this.camera)
   }
   render(time) {
-    time *= 0.001
     const canvas = this.renderer.domElement
     this.camera.aspect = canvas.clientWidth / canvas.clientHeight
     this.camera.updateProjectionMatrix()
