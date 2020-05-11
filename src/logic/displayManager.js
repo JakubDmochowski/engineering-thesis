@@ -1,6 +1,8 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Tooltip from './tooltip'
+import DetectorGeometry from './detectorGeometry'
+import data from '../data/event35_run226466.json'
 
 class DisplayManager {
   constructor(canvas = null, tooltip = null) {
@@ -11,18 +13,16 @@ class DisplayManager {
     this.pickHelper = null
     this.canvas = canvas
     this.tooltip = tooltip
-    this.data = []
   }
   init() {
     const fov = 70
     const aspect = this.canvas.clientWidth / this.canvas.clientHeight
     const near = 0.1
-    const far = 200
+    const far = 20000
     this.camera = new THREE.PerspectiveCamera(fov,aspect,near,far)
 
     this.scene = new THREE.Scene()
-    this.addCube()
-    this.addCube()
+    new DetectorGeometry(this.scene)
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
     this.renderer.setSize(
@@ -31,7 +31,7 @@ class DisplayManager {
     )
     this.canvas.appendChild(this.renderer.domElement)
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
-    this.camera.position.set( 0, 0, 5 )
+    this.camera.position.set( 0, 0, 1500 )
     this.controls.update()
     this.pickHelper = new Tooltip(this.tooltip)
     this.render()
