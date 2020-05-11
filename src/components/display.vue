@@ -1,5 +1,5 @@
 <template>
-  <div ref="display">
+  <div ref="display" class="relative">
     <div id="tooltip" ref="tooltip">
       asdf
       <div id="arrow" data-popper-arrow></div>

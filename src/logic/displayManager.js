@@ -2,13 +2,14 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import Tooltip from './tooltip'
 import DetectorGeometry from './detectorGeometry'
-import data from '../data/event35_run226466.json'
+import Stats from 'three/examples/jsm/libs/stats.module.js'
 
 class DisplayManager {
   constructor(canvas = null, tooltip = null) {
     this.camera =  null
     this.scene = null
     this.renderer = null
+    this.stats = null
     this.controls = null
     this.pickHelper = null
     this.canvas = canvas
@@ -40,7 +41,21 @@ class DisplayManager {
     this.camera.position.set( 0, 0, 1500 )
     this.controls.update()
     this.pickHelper = new Tooltip(this.tooltip)
+    this.stats = this.createStats()
+    this.canvas.appendChild( this.stats.domElement )
     this.render()
+  }
+  createStats() {
+    var stats = new Stats()
+    stats.setMode(0)
+
+    stats.domElement.style.position = 'absolute'
+    stats.domElement.style.right = '0'
+    stats.domElement.style.bottom = '0'
+    stats.domElement.style.top = 'initial'
+    stats.domElement.style.left = 'initial'
+
+    return stats
   }
   addTracks(tracks) {
     const colorMap = {
@@ -91,6 +106,7 @@ class DisplayManager {
 
     this.renderer.render(this.scene, this.camera)
     this.controls.update()
+    this.stats.update();
     requestAnimationFrame((time) => this.render(time))
   }
 }
