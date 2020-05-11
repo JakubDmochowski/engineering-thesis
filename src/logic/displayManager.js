@@ -25,6 +25,11 @@ class DisplayManager {
     this.scene = new THREE.Scene()
     new DetectorGeometry(this.scene)
 
+    this.addTracks(data.fTracks)
+    if (data.fCaloClusters) {
+      this.addClusters(data.fCaloClusters)
+    }
+
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
     this.renderer.setSize(
       this.canvas.clientWidth,
@@ -37,6 +42,39 @@ class DisplayManager {
     this.pickHelper = new Tooltip(this.tooltip)
     this.render()
   }
+  addTracks(tracks) {
+    const colorMap = {
+      '1': 0x00ff00,
+      '-1': 0x0000ff
+    }
+    tracks.forEach(track => {
+      let tmp = []
+      let i = 0
+      for(;i < track.fPolyX.length; i++) {
+        tmp.push(new THREE.Vector3(track.fPolyX[i], track.fPolyY[i], track.fPolyZ[i]))
+      }
+      var curve = new THREE.CatmullRomCurve3(tmp)
+      const points = curve.getPoints(50)
+      var geometry = new THREE.BufferGeometry().setFromPoints(points)
+      var material = new THREE.LineBasicMaterial({color: colorMap[track.fCharge] || 0xff0000})
+  
+      var curveObject = new THREE.Line(geometry, material)
+      this.scene.add(curveObject)
+    })
+  }
+  addClusters(clusters) {
+    clusters.forEach(cluster => {
+      var geometry = new THREE.SphereGeometry(Math.log10(cluster.fEnergy) * 15, 6, 6)
+      var material = new THREE.MeshBasicMaterial({ color: 0x00ff00})
+      var point = new THREE.Mesh(geometry, material)
+      point.position.set(
+        cluster.fR * Math.cos(cluster.fPhi),
+        cluster.fR * Math.sin(cluster.fPhi),
+        cluster.fZ
+      )
+      this.scene.add(point)
+    })
+  }
   handleClick() {
     this.pickHelper.pick(event, this.renderer.domElement, this.scene, this.camera)
   }
@@ -45,26 +83,15 @@ class DisplayManager {
     this.camera.aspect = canvas.clientWidth / canvas.clientHeight
     this.camera.updateProjectionMatrix()
 
-    this.data.forEach((obj, ndx) => {
-      const speed = .1 + ndx * .05
-      const rot = time * speed
-      obj.rotation.x = rot
-      obj.rotation.y = rot
-      // obj.onRender()
-      // console.log(ndx)
-    });
+    this.scene.children
+      .filter(mesh => mesh.userData.onRender)
+      .forEach((mesh) => {
+        mesh.userData.onRender(time)
+      })
 
     this.renderer.render(this.scene, this.camera)
     this.controls.update()
     requestAnimationFrame((time) => this.render(time))
-  }
-  addCube() {
-    let geometry = new THREE.BoxGeometry()
-    let material = new THREE.MeshNormalMaterial({ color: 0x00ff00 })
-
-    let mesh = new THREE.Mesh(geometry, material)
-    this.scene.add(mesh)
-    this.data.push(mesh)
   }
 }
 
