@@ -11,12 +11,19 @@
 import DisplayManager from '../logic/displayManager'
 
 export default {
+  props: {
+    data: {
+      type: Object,
+      default: () => []
+    }
+  },
   mounted() {
     this.displayManager = new DisplayManager(
       this.$refs.display,
       this.$refs.tooltip
     )
     this.displayManager.init()
+    this.displayManager.updateData(this.data)
     window.addEventListener('resize', this.handleResize)
     window.addEventListener('click', this.displayManager.handleClick.bind(this.displayManager))
   },
@@ -27,6 +34,16 @@ export default {
   data: () => ({
     displayManager: null
   }),
+  watch: {
+    data: {
+      handler(data) {
+        if(this.displayManager) {
+          this.displayManager.updateData(data)
+        }
+      },
+      deep: true
+    }
+  },
   methods: {
     handleResize() {
       const canvas = this.displayManager.renderer.domElement;
@@ -38,6 +55,7 @@ export default {
           this.$refs.display.clientWidth,
           this.$refs.display.clientHeight
         )
+        this.displayManager.handleResize()
       }
       return needResize;
     }
