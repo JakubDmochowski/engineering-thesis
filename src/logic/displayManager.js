@@ -67,12 +67,13 @@ class DisplayManager {
     this.render()
   }
   objectDispose(object) {
-    object.geometry.dispose()
-    object.material.dispose()
     if(object.children) {
       object.children.forEach(child => {
         this.objectDispose(child)
       })
+    } else {
+      if(object.geometry) object.geometry.dispose()
+      if(object.material) object.material.dispose()
     }
   }
   removeMeshes(meshes) {
