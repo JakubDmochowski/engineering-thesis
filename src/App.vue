@@ -8,7 +8,7 @@
         'max-width': displayWidth,
         'width': displayWidth,
       }">
-        <display :data="data" v-if="showDisplay" class="w-full h-full" />
+        <display v-model="data" :initiate-with="initData" v-if="showDisplay" class="w-full h-full" />
       </div>
       <bottom-bar
         ref="bottomBar"
@@ -21,13 +21,13 @@
     </div>
     <side-bar
       ref="sideBar"
+      v-if="data"
       class="hidden lg:block"
       :style="{
         'width': desiredSideBarWidth,
         'min-width': desiredSideBarWidth
       }"
-      :data="data"
-      @input="handleInput"
+      v-model="data"
     >
     </side-bar>
   </div>
@@ -38,7 +38,7 @@ import display from './components/display'
 import SideBar from './components/sideBar'
 import BottomBar from './components/bottomBar'
 import MobileMenu from './components/mobileMenu'
-import data from './data/test1_uuid.json'
+import initData from './data/test1_uuid.json'
 
 export default {
   name: 'App',
@@ -57,7 +57,7 @@ export default {
     data: {},
   }),
   created() {
-    this.data = data
+    this.initData = initData
     window.addEventListener('resize', this.handleResize)
   },
   beforeDestroy() {
@@ -78,9 +78,6 @@ export default {
     },
   },
   methods: {
-    handleInput(event) {
-      this.data = event
-    },
     handleResize() {
       this.currentBottomBarHeight = this.$refs.bottomBar.$el.clientHeight
       this.currentSideBarWidth = this.$refs.sideBar.$el.clientWidth

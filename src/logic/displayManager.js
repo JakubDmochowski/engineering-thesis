@@ -14,21 +14,23 @@ class DisplayManager {
     this.pickHelper = null
     this.canvas = canvas
     this.tooltip = tooltip
-    this.data = {
-      Tracks: [],
-      CaloClusters: [],
-    }
+    this.objectLoader = null
   }
-  init() {
+  init(initData = null) {
     const fov = 70
     const aspect = this.canvas.clientWidth / this.canvas.clientHeight
     const near = 0.1
     const far = 20000
     this.camera = new THREE.PerspectiveCamera(fov,aspect,near,far)
     this.camera.layers.enableAll();
+    this.objectLoader = new THREE.ObjectLoader()
 
     this.scene = new THREE.Scene()
     new DetectorGeometry(this.scene)
+    if(initData) {
+      this.addTracks(initData.fTracks)
+      this.addClusters(initData.fCaloClusters)
+    }
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
     this.renderer.setSize(
       this.canvas.clientWidth,
@@ -42,41 +44,37 @@ class DisplayManager {
     this.stats = this.createStats()
     this.canvas.appendChild( this.stats.domElement )
     this.render()
+    console.log(this.scene.toJSON())
+    return this.scene.toJSON()
   }
   updateData(data) {
-    const formattedData = Object.keys(this.data).reduce((acc, type) => {
-      const typeData = (data[`f${type}`] || []).reduce((acc, curr) => {
-        if(!acc.newTracks) {
-          acc[`new${type}`] = []
-          acc[`changed${type}`] = []
-          acc[`unchanged${type}`] = []
-        }
-        const old = JSON.stringify((this.data[type] || []).find(tr => tr.userData.uuid === curr.uuid) || {})
-        if(Object.keys(old).length > 2) {
-          if(old === JSON.stringify(curr)) {
-            acc[`changed${type}`].push(curr)
-          } else {
-            acc[`unchanged${type}`].push(curr)
-          }
-        } else {
-          acc[`new${type}`].push(curr)
-        }
-        return acc
-      }, {})
-      const stillPresentIds = (data[`f${type}`] || []).map((t) => t.uuid)
-      return {
-        ...acc,
-        ...typeData,
-        [`deleted${type}`]: (this.data[type] || [] ).filter((c) => !stillPresentIds.includes(c.userData.uuid)),
-      }
-    }, {})
-    this.removeMeshes([
-      ...(formattedData.deletedTracks || []),
-      ...(formattedData.deletedCaloClusters || [])
-    ])
-    this.addTracks(formattedData.newTracks)
-    this.addClusters(formattedData.newCaloClusters)
+    const newScene = this.objectLoader.parse(data)
+    const newSceneObjectIds = newScene.children.map(c => c.uuid)
+    const oldSceneObjectIds = this.scene.children.map(c => c.uuid)
+
+    const objectsToRemove = this.scene.children.filter(c => !newSceneObjectIds.includes(c.uuid))
+    const objectsToAdd = newScene.children.filter(c => !oldSceneObjectIds.includes(c.uuid))
+    
+    const objectsToChange = this.scene.children.filter(c => newSceneObjectIds.includes(c.uuid))
+    const objectsToDispose = newScene.children.filter(c => oldSceneObjectIds.includes(c.uuid))
+    objectsToChange.forEach(obj => {
+      obj.copy(newScene.children.find(c => c.uuid === obj.uuid))
+    })
+    objectsToDispose.forEach(obj => this.objectDispose(obj))
+    this.removeMeshes(objectsToRemove)
+    objectsToAdd.forEach(obj => {
+      this.scene.add(obj)
+    })
     this.render()
+  }
+  objectDispose(object) {
+    object.geometry.dispose()
+    object.material.dispose()
+    if(object.children) {
+      object.children.forEach(child => {
+        this.objectDispose(child)
+      })
+    }
   }
   removeMeshes(meshes) {
     if(!meshes) {
@@ -86,8 +84,7 @@ class DisplayManager {
     this.scene.children
     .filter(c => objectsToRemove.includes(c.userData.uuid))
     .forEach(mesh => {
-      mesh.geometry.dispose()
-      mesh.material.dispose()
+      this.objectDispose(mesh)
       this.scene.remove(mesh)
     })
   }
@@ -114,7 +111,6 @@ class DisplayManager {
   
       var curveObject = new THREE.Line(geometry, material)
       curveObject.userData = track
-      this.data.Tracks.push(curveObject)
       this.scene.add(curveObject)
     }
   }
@@ -132,7 +128,6 @@ class DisplayManager {
         cluster.fZ
       )
       point.userData = cluster
-      this.data.CaloClusters.push(point)
       this.scene.add(point)
     })
   }

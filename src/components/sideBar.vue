@@ -18,7 +18,7 @@
 export default {
   name: 'SideBar',
   props: {
-    data: {
+    value: {
       type: Object,
       default: () => ({})
     }
@@ -29,12 +29,21 @@ export default {
   methods: {
     handleFilterClick() {
       this.checked = !this.checked
+      const tracks = this.value.object.children.filter(c => c.userData && c.userData._typename === 'AliMinimalisticTrack')
+      const tracksToRemove = tracks.slice(tracks.length / 2)
+      const objectsToRemove = tracksToRemove.map(t => t.uuid)
+      const geometriesToRemove = tracksToRemove.map(t => t.geometry)
+      const materialsToRemove = tracksToRemove.map(t => t.material)
       const newData = {
-        ...this.data,
-        fTracks: this.data.fTracks.slice(this.data.fTracks.length / 2)
+        geometries: this.value.geometries.filter(g => !geometriesToRemove.includes(g.uuid)),
+        materials: this.value.materials.filter(g => !materialsToRemove.includes(g.uuid)),
+        object: {
+          ...this.value.object,
+          children: this.value.object.children.filter(c => !objectsToRemove.includes(c.uuid))
+        }
       }
       this.$emit('input', newData)
-    }
+    },
   }
 }
 </script>

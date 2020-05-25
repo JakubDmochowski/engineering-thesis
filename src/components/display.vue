@@ -12,32 +12,37 @@ import DisplayManager from '../logic/displayManager'
 
 export default {
   props: {
-    data: {
+    value: {
       type: Object,
-      default: () => []
+      default: () => ({})
+    },
+    initiateWith: {
+      type: Object,
+      default: () => ({})
     }
   },
+  data: () => ({
+    displayManager: null,
+    mounted: false,
+  }),
   mounted() {
     this.displayManager = new DisplayManager(
       this.$refs.display,
       this.$refs.tooltip
     )
-    this.displayManager.init()
-    this.displayManager.updateData(this.data)
+    this.$emit('input', this.displayManager.init(this.initiateWith))
     window.addEventListener('resize', this.handleResize)
     window.addEventListener('click', this.displayManager.handleClick.bind(this.displayManager))
+    this.mounted = true
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.handleResize)
     window.removeEventListener('click', this.displayManager.handleClick.bind(this.displayManager))
   },
-  data: () => ({
-    displayManager: null
-  }),
   watch: {
-    data: {
+    value: {
       handler(data) {
-        if(this.displayManager) {
+        if(this.mounted && this.displayManager) {
           this.displayManager.updateData(data)
         }
       },
