@@ -44,7 +44,6 @@ class DisplayManager {
     this.stats = this.createStats()
     this.canvas.appendChild( this.stats.domElement )
     this.render()
-    console.log(this.scene.toJSON())
     return this.scene.toJSON()
   }
   updateData(data) {

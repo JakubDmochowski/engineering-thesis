@@ -10,7 +10,6 @@ class DetectorGeometry {
     var loader = new ColladaLoader(loadingManager)
     loader.load('./aliceGeom.dae', (collada) => {
       mesh = collada.scene
-      console.log(collada)
       mesh.scale.x = mesh.scale.y = mesh.scale.z = 1
       this.setPropertiesRecursively(
         mesh,
