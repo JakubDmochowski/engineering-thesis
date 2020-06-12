@@ -152,7 +152,6 @@ class DisplayManager {
     this.camera.updateProjectionMatrix()
   }
   render(time) {
-
     this.scene.children
       .filter(mesh => mesh.userData.onRender)
       .forEach((mesh) => {

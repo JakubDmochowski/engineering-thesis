@@ -8,7 +8,7 @@
         'max-width': displayWidth,
         'width': displayWidth,
       }">
-        <display v-model="data" :initiate-with="initData" v-if="showDisplay" class="w-full h-full" />
+        <display ref="display" v-model="data" v-if="showDisplay" class="w-full h-full" />
       </div>
       <bottom-bar
         ref="bottomBar"
@@ -38,7 +38,10 @@ import display from './components/display'
 import SideBar from './components/sideBar'
 import BottomBar from './components/bottomBar'
 import MobileMenu from './components/mobileMenu'
-import initData from './data/test1_uuid.json'
+
+import io from 'socket.io-client'
+
+const socket = io(process.env.VUE_APP_DATA_SOCKET_URL)
 
 export default {
   name: 'App',
@@ -57,8 +60,10 @@ export default {
     data: {},
   }),
   created() {
-    this.initData = initData
     window.addEventListener('resize', this.handleResize)
+
+    socket.on('initialize', this.initialize)
+    socket.on('track', this.updateData)
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.handleResize)
@@ -78,6 +83,15 @@ export default {
     },
   },
   methods: {
+    initialize(data) {
+      this.$refs.display.init(JSON.parse(data))
+      socket.off('initialize', this.initialize)
+    },
+    updateData(data) {
+      // happens when the file data changes, the file is still in ROOT-JSON format
+      this.$refs.display.update(JSON.parse(data))
+      // Pseudocode: this.GUI.handleDataUpdate(data)
+    },
     handleResize() {
       this.currentBottomBarHeight = this.$refs.bottomBar.$el.clientHeight
       this.currentSideBarWidth = this.$refs.sideBar.$el.clientWidth

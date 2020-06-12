@@ -1,0 +1,1 @@
+environment variables of server should come from .env of parent

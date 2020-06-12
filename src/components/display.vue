@@ -30,7 +30,6 @@ export default {
       this.$refs.display,
       this.$refs.tooltip
     )
-    this.$emit('input', this.displayManager.init(this.initiateWith))
     window.addEventListener('resize', this.handleResize)
     window.addEventListener('click', this.displayManager.handleClick.bind(this.displayManager))
     this.mounted = true
@@ -50,6 +49,9 @@ export default {
     }
   },
   methods: {
+    init(data) {
+      this.$emit('input', this.displayManager.init(data))
+    },
     handleResize() {
       const canvas = this.displayManager.renderer.domElement;
       const width = canvas.clientWidth;
