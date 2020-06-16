@@ -89,7 +89,7 @@ export default {
     },
     updateData(data) {
       // happens when the file data changes, the file is still in ROOT-JSON format
-      this.$refs.display.update(JSON.parse(data))
+      this.$refs.display.updateWithRawData(JSON.parse(data))
       // Pseudocode: this.GUI.handleDataUpdate(data)
     },
     handleResize() {

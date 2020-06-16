@@ -15,6 +15,10 @@ class DisplayManager {
     this.canvas = canvas
     this.tooltip = tooltip
     this.objectLoader = null
+    this.typesManaged = [
+      "AliMinimalisticTrack",
+      "AliMinimalisticCaloCluster"
+    ]
   }
   init(initData = null) {
     const fov = 70
@@ -38,32 +42,46 @@ class DisplayManager {
     )
     this.canvas.appendChild(this.renderer.domElement)
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
-    this.camera.position.set( 0, 0, 1500 )
+    this.camera.position.set( 600, 600, 1200 )
     this.controls.update()
     this.pickHelper = new Tooltip(this.tooltip)
     this.stats = this.createStats()
     this.canvas.appendChild( this.stats.domElement )
     this.render()
-    return this.scene.toJSON()
+    const s = this.scene.clone()
+    s.children = s.children.filter(c => c.userData._typename && this.typesManaged.includes(c.userData._typename))
+    const ret = s.toJSON()
+    s.dispose()
+    return ret
+  }
+  updateWithRawData(data) {
+    if(data) {
+      console.log(this.scene.children)
+      var objectsToRemove = this.scene.children.filter(c => this.typesManaged.includes(c.userData._typename))
+      this.removeMeshes(objectsToRemove)
+      this.addTracks(data.fTracks)
+      this.addClusters(data.fCaloClusters)
+    }
+    const s = this.scene.clone()
+    s.children = s.children.filter(c => c.userData._typename && this.typesManaged.includes(c.userData._typename))
+    const ret = s.toJSON()
+    s.dispose()
+    return ret
   }
   updateData(data) {
     const newScene = this.objectLoader.parse(data)
     const newSceneObjectIds = newScene.children.map(c => c.uuid)
     const oldSceneObjectIds = this.scene.children.map(c => c.uuid)
 
-    const objectsToRemove = this.scene.children.filter(c => !newSceneObjectIds.includes(c.uuid))
-    const objectsToAdd = newScene.children.filter(c => !oldSceneObjectIds.includes(c.uuid))
-    
-    const objectsToChange = this.scene.children.filter(c => newSceneObjectIds.includes(c.uuid))
-    const objectsToDispose = newScene.children.filter(c => oldSceneObjectIds.includes(c.uuid))
+    const objectsToChange = this.scene.children
+      .filter(c => c.userData._typename && this.typesManaged.includes(c.userData._typename))
+      .filter(c => newSceneObjectIds.includes(c.uuid))
+    const objectsToDispose = newScene.children
+      .filter(c => oldSceneObjectIds.includes(c.uuid))
     objectsToChange.forEach(obj => {
       obj.copy(newScene.children.find(c => c.uuid === obj.uuid))
     })
     objectsToDispose.forEach(obj => this.objectDispose(obj))
-    this.removeMeshes(objectsToRemove)
-    objectsToAdd.forEach(obj => {
-      this.scene.add(obj)
-    })
     this.render()
   }
   objectDispose(object) {
@@ -80,10 +98,7 @@ class DisplayManager {
     if(!meshes) {
       return
     }
-    const objectsToRemove = meshes.map(t => t.userData.uuid)
-    this.scene.children
-    .filter(c => objectsToRemove.includes(c.userData.uuid))
-    .forEach(mesh => {
+    meshes.forEach(mesh => {
       this.objectDispose(mesh)
       this.scene.remove(mesh)
     })

@@ -52,6 +52,11 @@ export default {
     init(data) {
       this.$emit('input', this.displayManager.init(data))
     },
+    updateWithRawData(data) {
+      if(this.mounted && this.displayManager) {
+        this.$emit('input', this.displayManager.updateWithRawData(data))
+      }
+    },
     handleResize() {
       const canvas = this.displayManager.renderer.domElement;
       const width = canvas.clientWidth;
