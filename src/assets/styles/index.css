@@ -9,3 +9,10 @@ body{
 h1 {
   @apply text-2xl font-bold;
 }
+
+.spinner.geometry-loader {
+  @apply fixed inset-0;
+}
+.spinner.geometry-loader > div {
+  @apply fixed inset-0 bg-gray-600 opacity-50;
+}
