@@ -7,7 +7,8 @@ var io = require('socket.io')(http);
 const fs = require('fs');
 const fse = require('fs-extra');
 
-const file = './data/data.json';
+const filename = 'data.json';
+const directory = './data/'
 var clients = 0;
 
 const PORT = process.env.DATA_SERVER_PORT || 5000
@@ -19,7 +20,7 @@ app.get('/', function(req, res) {
 io.on('connection', function(socket) {
    clients++;
    try{
-      fs.readFile(file, (err, data) => {
+      fs.readFile(`${directory}${filename}`, (err, data) => {
          if(err) throw err;
          io.sockets.emit('initialize', JSON.stringify(JSON.parse(data)));
       })
@@ -33,25 +34,28 @@ io.on('connection', function(socket) {
    });
 });
  
-fse.ensureFileSync(file)
+fse.ensureFileSync(`${directory}${filename}`)
 http.listen(PORT, function() {
-   console.log(`Watching for file changes on ${file}`);
+   console.log(`Watching for file changes on ${directory}${filename}`);
    let fsWait = false;
-   fs.watch(file, (event, filename) => {
+   fs.watch(`${directory}${filename}`, (event, filename) => {
       if (filename) {
          if (fsWait) return;
          fsWait = setTimeout(() => {
             fsWait = false;
          }, 100);
          console.log(`${filename} file Changed`);
-
-         fs.readFile(filename, (err, data) => {
-            if (err) throw err;
-            let student = JSON.parse(data);
-            console.log(student);
-            let msg = JSON.stringify(student); 
-            io.sockets.emit('track',{ description: msg});
-         });
+         try{
+            fs.readFile(`${directory}${filename}`, (err, data) => {
+               if (err) throw err;
+               let student = JSON.parse(data);
+               console.log(student);
+               let msg = JSON.stringify(student); 
+               io.sockets.emit('track', msg);
+            });
+         } catch (err) {
+            console.log(err)
+         }
       }
    });
 });
