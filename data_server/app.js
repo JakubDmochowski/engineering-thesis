@@ -37,25 +37,14 @@ io.on('connection', function(socket) {
 fse.ensureFileSync(`${directory}${filename}`)
 http.listen(PORT, function() {
    console.log(`Watching for file changes on ${directory}${filename}`);
-   let fsWait = false;
-   fs.watch(`${directory}${filename}`, (event, filename) => {
-      if (filename) {
-         if (fsWait) return;
-         fsWait = setTimeout(() => {
-            fsWait = false;
-         }, 100);
-         console.log(`${filename} file Changed`);
-         try{
-            fs.readFile(`${directory}${filename}`, (err, data) => {
-               if (err) throw err;
-               let student = JSON.parse(data);
-               console.log(student);
-               let msg = JSON.stringify(student); 
-               io.sockets.emit('track', msg);
-            });
-         } catch (err) {
-            console.log(err)
-         }
+   let filepath =`${directory}${filename}`
+   fs.watch(filepath, (event, filename) => {
+      const filepath = `${directory}${filename}`
+      const data = fse.readJsonSync(filepath, { throws: false})
+      if(data) {
+         console.log(data)
+         let msg = JSON.stringify(data)
+         io.sockets.emit('track', msg)
       }
-   });
-});
+   })
+})
