@@ -82,7 +82,6 @@ class DisplayManager {
       obj.copy(newScene.children.find(c => c.uuid === obj.uuid))
     })
     objectsToDispose.forEach(obj => this.objectDispose(obj))
-    this.render()
   }
   objectDispose(object) {
     if(object.children) {
