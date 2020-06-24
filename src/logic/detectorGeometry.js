@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 class DetectorGeometry {
   constructor(scene = null) {
-    const file = './alice.json'
+    const file = './AliceGeometry.json'
     var manager = new THREE.LoadingManager()
     var spinner = document.createElement('div')
     var spinnerBackdrop = document.createElement('div')
@@ -20,53 +20,22 @@ class DetectorGeometry {
     };
     let objectLoader = new THREE.ObjectLoader(manager)
     objectLoader.load(file, (data) => {
-      const geom = data.children.find(c => c.type !== 'PerspectiveCamera')
-      const camera = data.children.find(c => c.type === 'PerspectiveCamera')
-      if(camera) {
-        camera.children.forEach(c => {
-          scene.add(c)
-        })
-      }
-      if(geom) {
-        var mergeGeometry = new THREE.Geometry()
-        var meshFaceMaterial = new THREE.MeshLambertMaterial()
-        this.mergeGeometriesRecursively(mergeGeometry, geom)
-        
-        var mesh = new THREE.Mesh(mergeGeometry, meshFaceMaterial)
-        this.setPropertiesRecursively(
-          mesh,
-          {
-            layers: (l) => l.set(1),
-            material: {
-              transparent: true,
-              opacity: 0.05,
-              wireframe: true
-            },
-            userData: this,
+      console.log(data.toJSON())
+      let mesh = data
+      this.setPropertiesRecursively(
+        mesh,
+        {
+          layers: (l) => l.set(1),
+          material: {
+            transparent: true,
+            opacity: 0.05,
+            wireframe: true
           },
-        )
-        scene.add(mesh)
-      }
+          userData: this,
+        },
+      )
+      scene.add(data)
     })
-  }
-  mergeGeometriesRecursively(mergeGeom, node) {
-    if(node instanceof THREE.Mesh) {
-      let geom = new THREE.Geometry()
-      mergeGeom.merge(geom.fromBufferGeometry(node.geometry), this.getPositionMatrix(node))
-    }
-    node.children.forEach(child => {
-      this.mergeGeometriesRecursively(mergeGeom, child)
-    })
-  }
-  getPositionMatrix(node) {
-    if(!node) return new THREE.Matrix4()
-    if(!node.parent) {
-      return node.matrix
-    } else {
-      node.updateMatrixWorld()
-      node.applyMatrix4(this.getPositionMatrix(node.parent))
-      return node.matrix
-    }
   }
   setPropertiesRecursively(obj, properties) {
     Object.keys(properties).forEach(prop => {
