@@ -3,21 +3,12 @@
     <div class="h-full flex-grow flex flex-col">
       <mobile-menu class="block lg:hidden" />
       <div :style="{
-        'max-height': displayHeight,
-        'height': displayHeight,
+        'height': '100vh',
         'max-width': displayWidth,
         'width': displayWidth,
       }">
         <display ref="display" v-model="data" v-if="showDisplay" class="w-full h-full" />
       </div>
-      <bottom-bar
-        ref="bottomBar"
-        class="hidden lg:block"
-        :style="{
-          'height': desiredBottomBarHeight,
-          'min-height': desiredBottomBarHeight
-        }"
-      ></bottom-bar>
     </div>
     <side-bar
       ref="sideBar"
@@ -36,7 +27,6 @@
 <script>
 import display from './components/display'
 import SideBar from './components/sideBar'
-import BottomBar from './components/bottomBar'
 import MobileMenu from './components/mobileMenu'
 
 import io from 'socket.io-client'
@@ -48,13 +38,10 @@ export default {
   components: {
     display,
     SideBar,
-    BottomBar,
     MobileMenu
   },
   data: () => ({
-    desiredBottomBarHeight: '10rem',
-    desiredSideBarWidth: '15rem',
-    currentBottomBarHeight: 0,
+    desiredSideBarWidth: '16rem',
     currentSideBarWidth: 0,
     showDisplay: false,
     data: {},
@@ -75,9 +62,6 @@ export default {
     })
   },
   computed: {
-    displayHeight() {
-      return `calc(100vh - ${this.currentBottomBarHeight}px)`
-    },
     displayWidth() {
       return `calc(100vw - ${this.currentSideBarWidth}px)`
     },
@@ -93,7 +77,6 @@ export default {
       // Pseudocode: this.GUI.handleDataUpdate(data)
     },
     handleResize() {
-      this.currentBottomBarHeight = this.$refs.bottomBar.$el.clientHeight
       this.currentSideBarWidth = this.$refs.sideBar.$el.clientWidth
     }
   }
