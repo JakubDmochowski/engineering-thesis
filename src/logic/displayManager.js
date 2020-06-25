@@ -20,7 +20,7 @@ class DisplayManager {
       "AliMinimalisticCaloCluster"
     ]
   }
-  init(initData = null) {
+  async init(initData = null, callback = null) {
     const fov = 70
     const aspect = this.canvas.clientWidth / this.canvas.clientHeight
     const near = 0.1
@@ -30,10 +30,37 @@ class DisplayManager {
     this.objectLoader = new THREE.ObjectLoader()
 
     this.scene = new THREE.Scene()
-    new DetectorGeometry(this.scene)
     if(initData) {
       this.addObjects(initData)
     }
+      const file = './AliceGeometry.json'
+      var manager = new THREE.LoadingManager()
+      var spinner = document.createElement('div')
+      var spinnerBackdrop = document.createElement('div')
+      manager.onStart = () => {
+        spinner.appendChild(spinnerBackdrop)
+        spinner.classList.add("spinner")
+        spinner.classList.add("geometry-loader")
+        document.body.appendChild(spinner)
+      };
+      manager.onLoad = () => {
+        document.body.removeChild(spinner)
+      };
+      manager.onError = () => {
+        document.body.removeChild(spinner)
+      };
+      let objectLoader = new THREE.ObjectLoader(manager)
+      await objectLoader.load(
+        file,
+        (data) => {
+          new DetectorGeometry(this.scene, data)
+          if(callback) {
+            callback(this.scene.toJSON())
+          }
+        },
+        () => {},
+        err => console.log(err)
+      )
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
     this.renderer.setSize(
       this.canvas.clientWidth,
@@ -47,11 +74,7 @@ class DisplayManager {
     this.stats = this.createStats()
     this.canvas.appendChild( this.stats.domElement )
     this.render()
-    const s = this.scene.clone()
-    s.children = s.children.filter(c => c.userData._typename && this.typesManaged.includes(c.userData._typename))
-    const ret = s.toJSON()
-    s.dispose()
-    return ret
+    return this.scene.toJSON()
   }
   updateWithRawData(data) {
     if(data) {
@@ -61,11 +84,7 @@ class DisplayManager {
       this.addTracks(data.fTracks)
       this.addClusters(data.fCaloClusters)
     }
-    const s = this.scene.clone()
-    s.children = s.children.filter(c => c.userData._typename && this.typesManaged.includes(c.userData._typename))
-    const ret = s.toJSON()
-    s.dispose()
-    return ret
+    return this.scene.toJSON()
   }
   updateData(data) {
     const newScene = this.objectLoader.parse(data)
@@ -73,7 +92,6 @@ class DisplayManager {
     const oldSceneObjectIds = this.scene.children.map(c => c.uuid)
 
     const objectsToChange = this.scene.children
-      .filter(c => c.userData._typename && this.typesManaged.includes(c.userData._typename))
       .filter(c => newSceneObjectIds.includes(c.uuid))
     const objectsToDispose = newScene.children
       .filter(c => oldSceneObjectIds.includes(c.uuid))

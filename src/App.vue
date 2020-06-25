@@ -25,9 +25,9 @@
 </template>
 
 <script>
-import display from './components/display'
-import SideBar from './components/sideBar'
-import MobileMenu from './components/mobileMenu'
+import display from './components/gui/display'
+import SideBar from './components/gui/sideBar'
+import MobileMenu from './components/gui/mobileMenu'
 
 import io from 'socket.io-client'
 

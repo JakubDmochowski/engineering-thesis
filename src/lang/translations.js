@@ -2,7 +2,7 @@ export default {
   sidebar: {
     filters: {
       label: 'Filters',
-      show_detector: 'Show detector',
+      hide_detector: 'Hide detector model',
     }
   }
 }

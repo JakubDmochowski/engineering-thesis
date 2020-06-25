@@ -8,7 +8,7 @@
 </template>
 
 <script>
-import DisplayManager from '../logic/displayManager'
+import DisplayManager from '../../logic/displayManager'
 
 export default {
   props: {
@@ -50,7 +50,14 @@ export default {
   },
   methods: {
     init(data) {
-      this.$emit('input', this.displayManager.init(data))
+      const onGeometryLoaded = (response) => {
+        this.$emit('input', response)
+      }
+      this.displayManager
+        .init(data, onGeometryLoaded)
+        .then(response => {
+          this.$emit('input', response)
+        })
     },
     updateWithRawData(data) {
       if(this.mounted && this.displayManager) {
