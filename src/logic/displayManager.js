@@ -32,8 +32,7 @@ class DisplayManager {
     this.scene = new THREE.Scene()
     new DetectorGeometry(this.scene)
     if(initData) {
-      this.addTracks(initData.fTracks)
-      this.addClusters(initData.fCaloClusters)
+      this.addObjects(initData)
     }
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
     this.renderer.setSize(
@@ -102,48 +101,46 @@ class DisplayManager {
       this.scene.remove(mesh)
     })
   }
-  addTracks(tracks) {
-    if(!tracks) {
-      return
-    }
+  createTrackObject(track) {
+    let tmp = []
+    let i = 0
     const colorMap = {
       '1': 0x00ff00,
       '-1': 0x0000ff
     }
-    let j = 0
-    for(; j < tracks.length; j++) {
-      let tmp = []
-      let i = 0
-      let track = tracks[j % tracks.length]
-      for(;i < track.fPolyX.length; i++) {
-        tmp.push(new THREE.Vector3(track.fPolyX[i], track.fPolyY[i], track.fPolyZ[i]))
-      }
-      var curve = new THREE.CatmullRomCurve3(tmp)
-      const points = curve.getPoints(15)
-      var geometry = new THREE.BufferGeometry().setFromPoints(points)
-      var material = new THREE.LineBasicMaterial({color: colorMap[track.fCharge] || 0xff0000})
-  
-      var curveObject = new THREE.Line(geometry, material)
-      curveObject.userData = track
-      this.scene.add(curveObject)
+    for(;i < track.fPolyX.length; i++) {
+      tmp.push(new THREE.Vector3(track.fPolyX[i], track.fPolyY[i], track.fPolyZ[i]))
     }
+    var curve = new THREE.CatmullRomCurve3(tmp)
+    const points = curve.getPoints(15)
+    var geometry = new THREE.BufferGeometry().setFromPoints(points)
+    var material = new THREE.LineBasicMaterial({color: colorMap[track.fCharge] || 0xff0000})
+
+    var obj = new THREE.Line(geometry, material)
+    obj.userData = track
+    return obj
+  }
+  createClusterObject(cluster) {
+    var geometry = new THREE.SphereGeometry(Math.log10(cluster.fEnergy) * 15, 6, 6)
+    var material = new THREE.MeshBasicMaterial({ color: 0x00ff00})
+    var obj = new THREE.Mesh(geometry, material)
+    obj.position.set(
+      cluster.fR * Math.cos(cluster.fPhi),
+      cluster.fR * Math.sin(cluster.fPhi),
+      cluster.fZ
+    )
+    obj.userData = cluster
+    return obj
+  }
+  addObjects(data) {
+    this.addTracks(data.fTracks)
+    this.addClusters(data.fCaloClusters)
+  }
+  addTracks(tracks) {
+    (tracks || []).forEach(track => this.scene.add(this.createTrackObject(track)))
   }
   addClusters(clusters) {
-    if(!clusters) {
-      return
-    }
-    clusters.forEach(cluster => {
-      var geometry = new THREE.SphereGeometry(Math.log10(cluster.fEnergy) * 15, 6, 6)
-      var material = new THREE.MeshBasicMaterial({ color: 0x00ff00})
-      var point = new THREE.Mesh(geometry, material)
-      point.position.set(
-        cluster.fR * Math.cos(cluster.fPhi),
-        cluster.fR * Math.sin(cluster.fPhi),
-        cluster.fZ
-      )
-      point.userData = cluster
-      this.scene.add(point)
-    })
+    (clusters || []).forEach(cluster => this.scene.add(this.createClusterObject(cluster)))
   }
   createStats() {
     var stats = new Stats()
