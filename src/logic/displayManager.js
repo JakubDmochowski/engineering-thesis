@@ -78,7 +78,6 @@ class DisplayManager {
   }
   updateWithRawData(data) {
     if(data) {
-      console.log(this.scene.children)
       var objectsToRemove = this.scene.children.filter(c => this.typesManaged.includes(c.userData._typename))
       this.removeMeshes(objectsToRemove)
       this.addTracks(data.fTracks)
@@ -88,36 +87,31 @@ class DisplayManager {
   }
   updateData(data) {
     const newScene = this.objectLoader.parse(data)
-    const newSceneObjectIds = newScene.children.map(c => c.uuid)
-    const oldSceneObjectIds = this.scene.children.map(c => c.uuid)
-
-    const objectsToChange = this.scene.children
-      .filter(c => newSceneObjectIds.includes(c.uuid))
-    const objectsToDispose = newScene.children
-      .filter(c => oldSceneObjectIds.includes(c.uuid))
-    objectsToChange.forEach(obj => {
-      obj.copy(newScene.children.find(c => c.uuid === obj.uuid))
-    })
-    objectsToDispose.forEach(obj => this.objectDispose(obj))
+    this.removeMeshes(this.scene.children)
+    this.scene.copy(newScene)
+    newScene.dispose()
   }
   objectDispose(object) {
     if(object.children) {
       object.children.forEach(child => {
         this.objectDispose(child)
       })
-    } else {
-      if(object.geometry) object.geometry.dispose()
-      if(object.material) object.material.dispose()
+    }
+    if(object.geometry) {
+      object.geometry.dispose()
+    }
+    if(object.material) {
+      object.material.dispose()
     }
   }
   removeMeshes(meshes) {
     if(!meshes) {
       return
     }
-    meshes.forEach(mesh => {
-      this.objectDispose(mesh)
-      this.scene.remove(mesh)
-    })
+    while(meshes.length) {
+      this.objectDispose(meshes[0])
+      this.scene.remove(meshes[0])
+    }
   }
   createTrackObject(track) {
     let tmp = []
