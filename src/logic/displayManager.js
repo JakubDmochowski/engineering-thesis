@@ -157,7 +157,7 @@ class DisplayManager {
       tmp.push(new THREE.Vector3(track.fPolyX[i], track.fPolyY[i], track.fPolyZ[i]))
     }
     var curve = new THREE.CatmullRomCurve3(tmp)
-    const points = curve.getPoints(15)
+    const points = curve.getPoints(track.fPolyX.length)
     var geometry = new THREE.BufferGeometry().setFromPoints(points)
     var material = new THREE.LineBasicMaterial({color: colorMap[track.fCharge] || 0xff0000})
 
