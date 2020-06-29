@@ -14,6 +14,39 @@
           @input="handleDarkModeToggle"
           :label="$tr('sidebar.filters.enable_dark_mode')"
         />
+        <div class="rounded shadow p-2 mt-4">
+          <span v-text="$tr('sidebar.download.label')" />
+          <custom-toggle-switch
+            v-model="downloadData.useSVG"
+            :label="$tr('sidebar.download.use_svg')"
+          />
+          <custom-toggle-switch
+            v-model="downloadData.useCustomResolution"
+            :label="$tr('sidebar.download.use_custom_resolution')"
+          />
+          <div v-show="downloadData.useCustomResolution" class="mt-2 flex">
+            <input
+              v-model="downloadData.width"
+              class="block shadow rounded border py-2 px-3"
+              size="6"
+              :placeholder="$tr('sidebar.download.width_placeholder')"
+            />
+            <div class="mx-1 flex flex-grow justify-center items-center">
+              x
+            </div>
+            <input
+              v-model="downloadData.height"
+              class="block shadow rounded border py-2 px-3"
+              size="6"
+              :placeholder="$tr('sidebar.download.height_placeholder')"
+            />
+          </div>
+          <custom-button
+            class="mt-4 text-center"
+            v-text="$tr('sidebar.download.screenshot_download')"
+            @click="download"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -21,11 +54,13 @@
 
 <script>
 import CustomToggleSwitch from '../customToggleSwitch'
+import CustomButton from '../customButton'
 
 export default {
   name: 'SideBar',
   components: {
     CustomToggleSwitch,
+    CustomButton,
   },
   props: {
     value: {
@@ -35,7 +70,13 @@ export default {
   },
   data: () => ({
     hideDetector: false,
-    enableDarkMode: true,
+    enableDarkMode: false,
+    downloadData: {
+      useSVG: true,
+      useCustomResolution: false,
+      width: null,
+      height: null,
+    },
   }),
   created() {
     this.setDarkMode(this.enableDarkMode)
@@ -54,9 +95,20 @@ export default {
       this.enableDarkMode = event
       this.setDarkMode(event)
     },
+    download() {
+      this.$emit(
+        'download',
+        {
+          ...this.downloadData,
+          darkMode: this.enableDarkMode,
+        }
+      )
+    },
     setDarkMode(value) {
-      if(!value && document.body.classList.contains("dark-mode")) {
-        document.body.classList.remove("dark-mode")
+      if(!value) {
+        if(document.body.classList.contains("dark-mode")) {
+          document.body.classList.remove("dark-mode")
+        }
       } else if(!document.body.classList.contains("dark-mode")) {
         document.body.classList.add("dark-mode")
       }

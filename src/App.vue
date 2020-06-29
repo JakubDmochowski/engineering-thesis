@@ -19,6 +19,7 @@
         'min-width': desiredSideBarWidth
       }"
       v-model="data"
+      @download="handleDownload"
     >
     </side-bar>
   </div>
@@ -78,7 +79,10 @@ export default {
     },
     handleResize() {
       this.currentSideBarWidth = this.$refs.sideBar.$el.clientWidth
-    }
+    },
+    handleDownload(data = null) {
+      this.$refs.display.download(data)
+    },
   }
 }
 </script>

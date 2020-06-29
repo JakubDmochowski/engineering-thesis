@@ -28,7 +28,8 @@ export default {
   mounted() {
     this.displayManager = new DisplayManager(
       this.$refs.display,
-      this.$refs.tooltip
+      this.$refs.tooltip,
+      document.body.classList.contains("dark-mode")
     )
     window.addEventListener('resize', this.handleResize)
     window.addEventListener('click', this.displayManager.handleClick.bind(this.displayManager))
@@ -63,6 +64,9 @@ export default {
       if(this.mounted && this.displayManager) {
         this.$emit('input', this.displayManager.updateWithRawData(data))
       }
+    },
+    download(data) {
+      this.displayManager.download(data)
     },
     handleResize() {
       const canvas = this.displayManager.renderer.domElement;

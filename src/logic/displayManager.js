@@ -1,14 +1,16 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { SVGRenderer } from 'three/examples/jsm/renderers/SVGRenderer'
 import Tooltip from './tooltip'
 import DetectorGeometry from './detectorGeometry'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
 
 class DisplayManager {
-  constructor(canvas = null, tooltip = null) {
+  constructor(canvas = null, tooltip = null, darkMode = false) {
     this.camera =  null
     this.scene = null
     this.renderer = null
+    this.svgRenderer = null
     this.stats = null
     this.controls = null
     this.pickHelper = null
@@ -19,6 +21,7 @@ class DisplayManager {
       "AliMinimalisticTrack",
       "AliMinimalisticCaloCluster"
     ]
+    this.darkMode = darkMode
   }
   async init(initData = null, callback = null) {
     const fov = 70
@@ -53,7 +56,7 @@ class DisplayManager {
       await objectLoader.load(
         file,
         (data) => {
-          new DetectorGeometry(this.scene, data)
+          new DetectorGeometry(this.scene, data, this.darkMode)
           if(callback) {
             callback(this.scene.toJSON())
           }
@@ -112,6 +115,36 @@ class DisplayManager {
       this.objectDispose(meshes[0])
       this.scene.remove(meshes[0])
     }
+  }
+  download(data = {}) {
+    var filename = "screenshot_ALICE"
+    var url = null
+    if(!data.useSVG) {
+      filename += ".png"
+      this.renderer.setClearColor(data.darkMode ? new THREE.Color(0x000000) : new THREE.Color(0xffffff))
+      this.renderer.render(this.scene, this.camera)
+      url = this.renderer.domElement.toDataURL("image/png").replace("image/png", "image/octet-stream")
+    } else {
+      filename += ".svg"
+      if(!this.svgRenderer) {
+        this.svgRenderer = new SVGRenderer()
+      }
+      this.svgRenderer.setSize(
+        data.useCustomResolution ? data.width || this.canvas.clientWidth : this.canvas.clientWidth,
+        data.useCustomResolution ? data.height || this.canvas.clientHeight : this.canvas.clientHeight
+      )
+      this.svgRenderer.render(this.scene, this.camera)
+      var blobData = new Blob(
+        [this.svgRenderer.domElement.outerHTML],
+        { type:"image/svg+xml;charset=utf-8" }
+      )
+      url = URL.createObjectURL(blobData)
+    }
+    var a = document.createElement("a")
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
   }
   createTrackObject(track) {
     let tmp = []

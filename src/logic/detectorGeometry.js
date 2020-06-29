@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 
 class DetectorGeometry {
-  constructor(scene, data) {
+  constructor(scene, data, darkModeEnabled = false) {
     const lightModeDefaults = {
       layers: (l) => l.set(1),
       material: {
@@ -19,7 +19,6 @@ class DetectorGeometry {
         emissive: new THREE.Color(0xffff00)
       },
     }
-    const darkModeEnabled = document.body.classList.contains("dark-mode")
     this.setProperties(
       data,
       darkModeEnabled ? darkModeDefaults : lightModeDefaults,
