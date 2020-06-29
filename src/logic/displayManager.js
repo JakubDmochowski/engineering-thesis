@@ -166,20 +166,26 @@ class DisplayManager {
     return obj
   }
   createClusterObject(cluster) {
-    var geometry = new THREE.SphereGeometry(Math.log10(cluster.fEnergy) * 15, 6, 6)
-    var material = new THREE.MeshBasicMaterial({ color: 0x00ff00})
+    var length = cluster.fEnergy
+    var radius = 14
+    var radialSegments = 16
+    var color = 0xDAA520
+    var geometry = new THREE.CylinderGeometry(radius,radius, length, radialSegments)
+    var material = new THREE.MeshBasicMaterial({ color })
     var obj = new THREE.Mesh(geometry, material)
     obj.position.set(
-      cluster.fR * Math.cos(cluster.fPhi),
-      cluster.fR * Math.sin(cluster.fPhi),
+      (cluster.fR + length / 2) * Math.cos(cluster.fPhi),
+      (cluster.fR + length / 2) * Math.sin(cluster.fPhi),
       cluster.fZ
     )
+    obj.lookAt(0,0,obj.position.z)
+    obj.rotateX(Math.PI / 2)
     obj.userData = cluster
     return obj
   }
   addObjects(data) {
     this.addTracks(data.fTracks)
-    this.addClusters(data.fCaloClusters)
+    this.addClusters(data.fCaloClusters || data.fClusters)
   }
   addTracks(tracks) {
     (tracks || []).forEach(track => this.scene.add(this.createTrackObject(track)))
