@@ -119,21 +119,34 @@ class DisplayManager {
   download(data = {}) {
     var filename = "screenshot_ALICE"
     var url = null
+    const imageCamera = this.camera.clone()
+    const width = data.useCustomResolution ? data.width || this.canvas.clientWidth : this.canvas.clientWidth
+    const height = data.useCustomResolution ? data.height || this.canvas.clientHeight : this.canvas.clientHeight
+    imageCamera.aspect = width/height
+    imageCamera.updateProjectionMatrix()
     if(!data.useSVG) {
       filename += ".png"
       this.renderer.setClearColor(data.darkMode ? new THREE.Color(0x000000) : new THREE.Color(0xffffff))
-      this.renderer.render(this.scene, this.camera)
+      this.renderer.setSize(
+        width,
+        height
+      )
+      this.renderer.render(this.scene, imageCamera)
       url = this.renderer.domElement.toDataURL("image/png").replace("image/png", "image/octet-stream")
+      this.renderer.setSize(
+        this.canvas.clientWidth,
+        this.canvas.clientHeight
+      )
     } else {
       filename += ".svg"
       if(!this.svgRenderer) {
         this.svgRenderer = new SVGRenderer()
       }
       this.svgRenderer.setSize(
-        data.useCustomResolution ? data.width || this.canvas.clientWidth : this.canvas.clientWidth,
-        data.useCustomResolution ? data.height || this.canvas.clientHeight : this.canvas.clientHeight
+        width,
+        height
       )
-      this.svgRenderer.render(this.scene, this.camera)
+      this.svgRenderer.render(this.scene, imageCamera)
       var blobData = new Blob(
         [this.svgRenderer.domElement.outerHTML],
         { type:"image/svg+xml;charset=utf-8" }
