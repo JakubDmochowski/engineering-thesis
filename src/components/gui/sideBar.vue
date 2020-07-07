@@ -85,7 +85,10 @@ export default {
     handleHideDetectorToggle(event) {
       this.hideDetector = event
       let newValue = JSON.parse(JSON.stringify(this.value))
-      let geomObj = newValue.object.children.find(c => c.userData && c.userData._typename === 'DetectorGeometry')
+      let geomObj = newValue.data
+        && newValue.data.object
+        && newValue.data.object.children
+        && newValue.data.object.children.find(c => c.userData && c.userData._typename === 'DetectorGeometry')
       if(geomObj) {
         geomObj.visible = !event
         this.$emit('input', newValue)
@@ -99,24 +102,25 @@ export default {
       this.$emit(
         'download',
         {
-          ...this.downloadData,
-          darkMode: this.enableDarkMode,
-        }
+          data: this.downloadData,
+          meta: {
+            darkMode: this.enableDarkMode,
+          },
+        },
       )
     },
     setDarkMode(value) {
-      if(!value) {
-        if(document.body.classList.contains("dark-mode")) {
-          document.body.classList.remove("dark-mode")
-        }
-      } else if(!document.body.classList.contains("dark-mode")) {
-        document.body.classList.add("dark-mode")
-      }
-      //update geometry color
       let newValue = JSON.parse(JSON.stringify(this.value))
-      let geomObj = newValue.object && newValue.object.children.find(c => c.userData && c.userData._typename === 'DetectorGeometry')
+      let geomObj = newValue.data
+        && newValue.data.object
+        && newValue.data.object.children
+        && newValue.data.object.children.find(c => c.userData && c.userData._typename === 'DetectorGeometry')
+      newValue.meta = {
+        ...(newValue.meta || {}),
+        darkMode: value,
+      }
       if(geomObj) {
-        let geomMaterial = newValue.materials.find(m => m.uuid === geomObj.material)
+        let geomMaterial = newValue.data.materials.find(m => m.uuid === geomObj.material)
         if(geomMaterial) {
           if(value) {
             geomMaterial.emissive = 0xffff00

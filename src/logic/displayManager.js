@@ -64,7 +64,8 @@ class DisplayManager {
         () => {},
         err => console.log(err)
       )
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true })
+    this.renderer = new THREE.WebGLRenderer({ antialias: true })
+    this.renderer.setClearColor(this.darkMode ? 0x000000 : 0xffffff, 1)
     this.renderer.setSize(
       this.canvas.clientWidth,
       this.canvas.clientHeight
@@ -86,9 +87,15 @@ class DisplayManager {
       this.addTracks(data.fTracks)
       this.addClusters(data.fCaloClusters)
     }
-    return this.scene.toJSON()
+    return { data: this.scene.toJSON() }
   }
-  updateData(data) {
+  updateData({ data, meta }) {
+    console.log("updateData", data)
+    if(meta) {
+      if(typeof meta.darkMode === 'boolean') {
+        this.renderer.setClearColor(meta.darkMode ? 0x000000 : 0xffffff, 1)
+      }
+    }
     const newScene = this.objectLoader.parse(data)
     this.removeMeshes(this.scene.children)
     this.scene.copy(newScene)
@@ -116,7 +123,7 @@ class DisplayManager {
       this.scene.remove(meshes[0])
     }
   }
-  download(data = {}) {
+  download({ data, meta }) {
     var filename = "screenshot_ALICE"
     var url = null
     const imageCamera = this.camera.clone()
@@ -126,7 +133,7 @@ class DisplayManager {
     imageCamera.updateProjectionMatrix()
     if(!data.useSVG) {
       filename += ".png"
-      this.renderer.setClearColor(data.darkMode ? new THREE.Color(0x000000) : new THREE.Color(0xffffff))
+      // this.renderer.setClearColor(data.darkMode ? new THREE.Color(0x000000) : new THREE.Color(0xffffff))
       this.renderer.setSize(
         width,
         height
@@ -142,6 +149,7 @@ class DisplayManager {
       if(!this.svgRenderer) {
         this.svgRenderer = new SVGRenderer()
       }
+      this.svgRenderer.setClearColor(meta && meta.darkMode ? 0x000000 : 0xffffff, 1)
       this.svgRenderer.setSize(
         width,
         height

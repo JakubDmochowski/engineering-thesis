@@ -16,9 +16,6 @@ h1 {
 .spinner.geometry-loader > div {
   @apply fixed inset-0 bg-gray-600 opacity-50;
 }
-.dark-mode .display {
-  @apply bg-black;
-}
 canvas {
   outline: none;
 }

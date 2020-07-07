@@ -7,7 +7,13 @@
         'max-width': displayWidth,
         'width': displayWidth,
       }">
-        <display ref="display" v-model="data" v-if="showDisplay" class="w-full h-full" />
+        <display
+          ref="display"
+          :value="data"
+          @input="handleInput"
+          v-if="showDisplay"
+          class="w-full h-full"
+        />
       </div>
     </div>
     <side-bar
@@ -18,7 +24,8 @@
         'width': desiredSideBarWidth,
         'min-width': desiredSideBarWidth
       }"
-      v-model="data"
+      :value="data"
+      @input="handleInput"
       @download="handleDownload"
     >
     </side-bar>
@@ -68,13 +75,16 @@ export default {
     },
   },
   methods: {
+    handleInput(data) {
+      this.$set(this, 'data', data)
+    },
     initialize(data) {
-      this.$refs.display.init(JSON.parse(data))
+      this.$refs.display.init({ data: JSON.parse(data) })
       socket.off('initialize', this.initialize)
     },
     updateData(data) {
       // happens when the file data changes, the file is still in ROOT-JSON format
-      this.$refs.display.updateWithRawData(JSON.parse(data))
+      this.$refs.display.updateWithRawData({ data: JSON.parse(data) })
       // Pseudocode: this.GUI.handleDataUpdate(data)
     },
     handleResize() {
