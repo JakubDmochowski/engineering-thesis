@@ -147,6 +147,7 @@ class DisplayManager {
         height
       )
       this.svgRenderer.render(this.scene, imageCamera)
+      this.svgRenderer.domElement.setAttribute("xmlns", 'http://www.w3.org/2000/svg')
       var blobData = new Blob(
         [this.svgRenderer.domElement.outerHTML],
         { type:"image/svg+xml;charset=utf-8" }
