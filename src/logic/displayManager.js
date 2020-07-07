@@ -198,16 +198,16 @@ class DisplayManager {
     return obj
   }
   createClusterObject(cluster) {
-    var length = cluster.fEnergy
-    var radius = 14
-    var radialSegments = 16
+    var width = 5
+    var height = cluster.fEnergy
     var color = 0xDAA520
-    var geometry = new THREE.CylinderGeometry(radius,radius, length, radialSegments)
+    var length = 5
+    var geometry = new THREE.BoxGeometry(width,height,length)
     var material = new THREE.MeshBasicMaterial({ color })
     var obj = new THREE.Mesh(geometry, material)
     obj.position.set(
-      (cluster.fR + length / 2) * Math.cos(cluster.fPhi),
-      (cluster.fR + length / 2) * Math.sin(cluster.fPhi),
+      (cluster.fR + height / 2) * Math.cos(cluster.fPhi),
+      (cluster.fR + height / 2) * Math.sin(cluster.fPhi),
       cluster.fZ
     )
     obj.lookAt(0,0,obj.position.z)
