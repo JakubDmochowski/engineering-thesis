@@ -149,13 +149,23 @@ class DisplayManager {
       if(!this.svgRenderer) {
         this.svgRenderer = new SVGRenderer()
       }
-      this.svgRenderer.setClearColor(meta && meta.darkMode ? 0x000000 : 0xffffff, 1)
+      const clearColor = new THREE.Color(meta && meta.darkMode ? 0x000000 : 0xffffff)
+      this.svgRenderer.setClearColor(clearColor, 1)
       this.svgRenderer.setSize(
         width,
         height
       )
       this.svgRenderer.render(this.scene, imageCamera)
       this.svgRenderer.domElement.setAttribute("xmlns", 'http://www.w3.org/2000/svg')
+      const bgrect = document.createElement("rect")
+      bgrect.setAttribute('width', '100%')
+      bgrect.setAttribute('height', '100%')
+      const viewBoxValues = this.svgRenderer.domElement.getAttribute('viewBox').split(/\s+|,/)
+      bgrect.setAttribute('x', viewBoxValues[0])
+      bgrect.setAttribute('y', viewBoxValues[1])
+      bgrect.setAttribute('fill', clearColor.getStyle())
+      const firstChild = this.svgRenderer.domElement.children[0]
+      this.svgRenderer.domElement.insertBefore(bgrect, firstChild)
       var blobData = new Blob(
         [this.svgRenderer.domElement.outerHTML],
         { type:"image/svg+xml;charset=utf-8" }
