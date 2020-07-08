@@ -6,7 +6,7 @@ import DetectorGeometry from './detectorGeometry'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
 
 class DisplayManager {
-  constructor(canvas = null, tooltip = null, darkMode = false) {
+  constructor(canvas = null, tooltip = null, { meta }) {
     this.camera =  null
     this.scene = null
     this.renderer = null
@@ -21,9 +21,9 @@ class DisplayManager {
       "AliMinimalisticTrack",
       "AliMinimalisticCaloCluster"
     ]
-    this.darkMode = darkMode
+    this.darkMode = meta.darkMode
   }
-  async init(initData = null, callback = null) {
+  async init({ data: initData, meta }, callback = null) {
     const fov = 70
     const aspect = this.canvas.clientWidth / this.canvas.clientHeight
     const near = 0.1
@@ -56,7 +56,7 @@ class DisplayManager {
       await objectLoader.load(
         file,
         (data) => {
-          new DetectorGeometry(this.scene, data, this.darkMode)
+          new DetectorGeometry(this.scene, { data, meta })
           if(callback) {
             callback(this.scene.toJSON())
           }
@@ -90,7 +90,6 @@ class DisplayManager {
     return { data: this.scene.toJSON() }
   }
   updateData({ data, meta }) {
-    console.log("updateData", data)
     if(meta) {
       if(typeof meta.darkMode === 'boolean') {
         this.renderer.setClearColor(meta.darkMode ? 0x000000 : 0xffffff, 1)

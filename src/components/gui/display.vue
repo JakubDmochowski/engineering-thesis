@@ -29,7 +29,7 @@ export default {
     this.displayManager = new DisplayManager(
       this.$refs.display,
       this.$refs.tooltip,
-      this.value.meta && this.value.meta.darkMode
+      this.value
     )
     window.addEventListener('resize', this.handleResize)
     window.addEventListener('click', this.displayManager.handleClick.bind(this.displayManager))
@@ -43,7 +43,6 @@ export default {
     value: {
       handler(data) {
         if(this.mounted && this.displayManager) {
-          console.log("update", data)
           this.displayManager.updateData(data)
         }
       },
@@ -51,7 +50,7 @@ export default {
     }
   },
   methods: {
-    init({ data }) {
+    init(data) {
       const onGeometryLoaded = (response) => {
         this.$emit('input', { data: response })
       }

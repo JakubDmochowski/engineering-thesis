@@ -4,13 +4,22 @@
     <div class="flex">
       <div class="cursor-pointer inline-block">
         <custom-toggle-switch
-          :value="hideDetector"
+          v-if="value.meta"
+          :value="value.meta.hideDetector"
           @input="handleHideDetectorToggle"
           :label="$tr('sidebar.filters.hide_detector')"
         />
         <custom-toggle-switch
+          v-if="value.meta"
           class="mt-2"
-          :value="enableDarkMode"
+          :value="value.meta.wireframe"
+          @input="handleWireframeDetectorToggle"
+          :label="$tr('sidebar.filters.wireframe')"
+        />
+        <custom-toggle-switch
+          v-if="value.meta"
+          class="mt-2"
+          :value="value.meta.darkMode"
           @input="handleDarkModeToggle"
           :label="$tr('sidebar.filters.enable_dark_mode')"
         />
@@ -66,11 +75,9 @@ export default {
     value: {
       type: Object,
       default: () => ({})
-    }
+    },
   },
   data: () => ({
-    hideDetector: false,
-    enableDarkMode: false,
     downloadData: {
       useSVG: true,
       useCustomResolution: false,
@@ -79,12 +86,12 @@ export default {
     },
   }),
   created() {
-    this.setDarkMode(this.enableDarkMode)
+    this.setDarkMode(this.value.meta.darkMode)
   },
   methods: {
     handleHideDetectorToggle(event) {
-      this.hideDetector = event
       let newValue = JSON.parse(JSON.stringify(this.value))
+      newValue.meta.hideDetector = event
       let geomObj = newValue.data
         && newValue.data.object
         && newValue.data.object.children
@@ -94,8 +101,20 @@ export default {
         this.$emit('input', newValue)
       }
     },
+    handleWireframeDetectorToggle(event) {
+      let newValue = JSON.parse(JSON.stringify(this.value))
+      newValue.meta.wireframe = event
+      let obj = newValue.data
+        && newValue.data.object
+        && newValue.data.object.children
+        && newValue.data.object.children.find(c => c.userData && c.userData._typename === 'DetectorGeometry')
+      if(obj) {
+        const material = newValue.data.materials.find(m => m.uuid === obj.material)
+        material.wireframe = event
+        this.$emit('input', newValue)
+      }
+    },
     handleDarkModeToggle(event) {
-      this.enableDarkMode = event
       this.setDarkMode(event)
     },
     download() {
@@ -104,13 +123,14 @@ export default {
         {
           data: this.downloadData,
           meta: {
-            darkMode: this.enableDarkMode,
+            darkMode: this.meta.darkMode,
           },
         },
       )
     },
     setDarkMode(value) {
       let newValue = JSON.parse(JSON.stringify(this.value))
+      newValue.meta.darkMode = value
       let geomObj = newValue.data
         && newValue.data.object
         && newValue.data.object.children

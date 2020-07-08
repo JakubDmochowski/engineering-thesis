@@ -52,7 +52,14 @@ export default {
     desiredSideBarWidth: '16rem',
     currentSideBarWidth: 0,
     showDisplay: false,
-    data: {},
+    data: {
+      data: {},
+      meta: {
+        hideDetector: true,
+        wireframe: true,
+        darkMode: false,
+      },
+    },
   }),
   created() {
     window.addEventListener('resize', this.handleResize)
@@ -76,10 +83,17 @@ export default {
   },
   methods: {
     handleInput(data) {
-      this.$set(this, 'data', data)
+      this.$set(
+        this,
+        'data',
+        {
+          ...this.data,
+          ...data
+        }
+      )
     },
     initialize(data) {
-      this.$refs.display.init({ data: JSON.parse(data) })
+      this.$refs.display.init({ data: JSON.parse(data), meta: this.data.meta })
       socket.off('initialize', this.initialize)
     },
     updateData(data) {

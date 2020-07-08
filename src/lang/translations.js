@@ -4,6 +4,7 @@ export default {
       label: 'Filters',
       hide_detector: 'Hide detector model',
       enable_dark_mode: 'Enable dark mode',
+      wireframe: 'Enable detector wireframe',
     },
     download: {
       label: 'Screenshot',

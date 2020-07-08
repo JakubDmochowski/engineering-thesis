@@ -1,27 +1,29 @@
 import * as THREE from 'three'
 
 class DetectorGeometry {
-  constructor(scene, data, darkModeEnabled = false) {
+  constructor(scene, { data, meta }) {
     const lightModeDefaults = {
       layers: (l) => l.set(1),
       material: {
         transparent: true,
         opacity: 0.05,
-        wireframe: true,
+        wireframe: meta && meta.wireframe,
       },
+      visible: !(meta && meta.hideDetector),
     }
     const darkModeDefaults = {
       layers: (l) => l.set(1),
       material: {
         transparent: true,
         opacity: 0.05,
-        wireframe: true,
-        emissive: new THREE.Color(0xffff00)
+        wireframe: meta && meta.wireframe,
+        emissive: new THREE.Color(0xffff00),
       },
+      visible: !(meta && meta.hideDetector),
     }
     this.setProperties(
       data,
-      darkModeEnabled ? darkModeDefaults : lightModeDefaults,
+      meta && meta.darkMode ? darkModeDefaults : lightModeDefaults,
       true
     )
     data.userData = {
