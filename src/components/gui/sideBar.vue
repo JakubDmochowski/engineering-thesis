@@ -23,6 +23,13 @@
           @input="handleDarkModeToggle"
           :label="$tr('sidebar.filters.enable_dark_mode')"
         />
+        <custom-toggle-switch
+          v-if="value.meta"
+          class="mt-2"
+          :value="value.meta.lights"
+          @input="handleLightsToggle"
+          :label="$tr('sidebar.filters.enable_lights')"
+        />
         <div class="rounded shadow p-2 mt-4">
           <span v-text="$tr('sidebar.download.label')" />
           <custom-toggle-switch
@@ -89,25 +96,51 @@ export default {
     this.setDarkMode(this.value.meta.darkMode)
   },
   methods: {
+    getObject(data, typename) {
+      return data.data
+        && data.data.object
+        && data.data.object.children
+        && data.data.object.children.find(c => c.userData && c.userData._typename === typename)
+    },
+    getObjects(data, typenameRegex) {
+      return data.data
+        && data.data.object
+        && data.data.object.children
+        && data.data.object.children.filter(c => c.userData && c.userData._typename.match(typenameRegex))
+    },
     handleHideDetectorToggle(event) {
       let newValue = JSON.parse(JSON.stringify(this.value))
       newValue.meta.hideDetector = event
-      let geomObj = newValue.data
-        && newValue.data.object
-        && newValue.data.object.children
-        && newValue.data.object.children.find(c => c.userData && c.userData._typename === 'DetectorGeometry')
+      let geomObj = this.getObject(newValue, 'DetectorGeometry')
       if(geomObj) {
         geomObj.visible = !event
         this.$emit('input', newValue)
       }
     },
+    handleLightsToggle(event) {
+      let newValue = JSON.parse(JSON.stringify(this.value))
+      newValue.meta.lights = event
+      let lights = this.getObjects(newValue, /.*Light$/g)
+      lights.forEach(light => {
+        light.intensity = event ? 1 : 0
+      })      
+      let geomObj = this.getObject(newValue, 'DetectorGeometry')
+      let geomMaterial = newValue.data.materials.find(m => m.uuid === geomObj.material)
+      if(newValue.meta.lights) {
+        if(geomMaterial) {
+          geomMaterial.emissive = 0x000000
+        }
+      } else {
+        if(geomMaterial) {
+          geomMaterial.emissive = newValue.meta.darkMode ? 0xffff00 : 0x000000
+        }
+      }
+      this.$emit('input', newValue)
+    },
     handleWireframeDetectorToggle(event) {
       let newValue = JSON.parse(JSON.stringify(this.value))
       newValue.meta.wireframe = event
-      let obj = newValue.data
-        && newValue.data.object
-        && newValue.data.object.children
-        && newValue.data.object.children.find(c => c.userData && c.userData._typename === 'DetectorGeometry')
+      let obj = this.getObject(newValue, 'DetectorGeometry')
       if(obj) {
         const material = newValue.data.materials.find(m => m.uuid === obj.material)
         material.wireframe = event
@@ -130,25 +163,31 @@ export default {
     },
     setDarkMode(value) {
       let newValue = JSON.parse(JSON.stringify(this.value))
-      newValue.meta.darkMode = value
-      let geomObj = newValue.data
-        && newValue.data.object
-        && newValue.data.object.children
-        && newValue.data.object.children.find(c => c.userData && c.userData._typename === 'DetectorGeometry')
       newValue.meta = {
         ...(newValue.meta || {}),
         darkMode: value,
       }
-      if(geomObj) {
+      if(newValue.data && newValue.data.object) {
+        let geomObj = this.getObject(newValue, 'DetectorGeometry')
         let geomMaterial = newValue.data.materials.find(m => m.uuid === geomObj.material)
-        if(geomMaterial) {
-          if(value) {
-            geomMaterial.emissive = 0xffff00
-          } else {
+        let directionalLightObj = this.getObject(newValue, 'DirectionalLight')
+        if(directionalLightObj) {
+          directionalLightObj.color = value ? 0xffff00 : 0xffffff
+        }
+        let ambientLightObj = this.getObject(newValue, 'AmbientLight')
+        if(ambientLightObj) {
+          ambientLightObj.color = value ? 0x535300 : 0x404040
+        }
+        if(newValue.meta.lights) {
+          if(geomMaterial) {
             geomMaterial.emissive = 0x000000
           }
-          this.$emit('input', newValue)
+        } else {
+          if(geomMaterial) {
+            geomMaterial.emissive = value ? 0xffff00 : 0x000000
+          }
         }
+        this.$emit('input', newValue)
       }
     }
   }

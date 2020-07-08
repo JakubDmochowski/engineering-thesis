@@ -55,8 +55,9 @@ export default {
     data: {
       data: {},
       meta: {
-        hideDetector: true,
-        wireframe: true,
+        lights: true,
+        hideDetector: false,
+        wireframe: false,
         darkMode: false,
       },
     },

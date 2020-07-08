@@ -64,6 +64,17 @@ class DisplayManager {
         () => {},
         err => console.log(err)
       )
+    var lights = {
+      ambient: new THREE.AmbientLight(this.darkMode ? 0x535300 : 0x404040, meta && meta.lights ? 1 : 0),
+      directional: new THREE.DirectionalLight(this.darkMode ? 0xffff00 : 0xffffff, meta && meta.lights ? 1 : 0)
+    }
+    Object.values(lights).forEach(light => {
+      light.userData = {
+        _typename: light.type
+      }
+      this.scene.add(light)
+    })
+
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
     this.renderer.setClearColor(this.darkMode ? 0x000000 : 0xffffff, 1)
     this.renderer.setSize(
