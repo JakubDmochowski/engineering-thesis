@@ -8,6 +8,7 @@ class DetectorGeometry {
         transparent: true,
         opacity: 0.05,
         wireframe: meta && meta.wireframe,
+        depthWrite: false,
       },
       visible: !(meta && meta.hideDetector),
     }
@@ -17,6 +18,7 @@ class DetectorGeometry {
         transparent: true,
         opacity: 0.05,
         wireframe: meta && meta.wireframe,
+        depthWrite: false,
         emissive: new THREE.Color(0xffff00),
       },
       visible: !(meta && meta.hideDetector),
