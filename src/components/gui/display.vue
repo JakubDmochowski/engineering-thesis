@@ -62,7 +62,7 @@ export default {
     },
     updateWithRawData(data) {
       if(this.mounted && this.displayManager) {
-        this.$emit('input', this.displayManager.updateWithRawData(data))
+        this.$emit('input', { data: this.displayManager.updateWithRawData(data) })
       }
     },
     download(data) {

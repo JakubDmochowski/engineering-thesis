@@ -91,14 +91,14 @@ class DisplayManager {
     this.render()
     return this.scene.toJSON()
   }
-  updateWithRawData(data) {
+  updateWithRawData({ data }) {
     if(data) {
       var objectsToRemove = this.scene.children.filter(c => this.typesManaged.includes(c.userData._typename))
       this.removeMeshes(objectsToRemove)
       this.addTracks(data.fTracks)
       this.addClusters(data.fCaloClusters)
     }
-    return { data: this.scene.toJSON() }
+    return this.scene.toJSON()
   }
   updateData({ data, meta }) {
     if(meta) {
@@ -128,9 +128,9 @@ class DisplayManager {
     if(!meshes) {
       return
     }
-    while(meshes.length) {
-      this.objectDispose(meshes[0])
-      this.scene.remove(meshes[0])
+    for(var i = meshes.length - 1; i >= 0; i--) {
+      this.objectDispose(meshes[i])
+      this.scene.remove(meshes[i])
     }
   }
   download({ data, meta }) {
