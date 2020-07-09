@@ -22,6 +22,7 @@ class DisplayManager {
       "AliMinimalisticCaloCluster"
     ]
     this.darkMode = meta.darkMode
+    this.spinner = null
   }
   async init({ data: initData, meta }, callback = null) {
     const fov = 70
@@ -38,20 +39,9 @@ class DisplayManager {
     }
       const file = './AliceGeometry.json'
       var manager = new THREE.LoadingManager()
-      var spinner = document.createElement('div')
-      var spinnerBackdrop = document.createElement('div')
-      manager.onStart = () => {
-        spinner.appendChild(spinnerBackdrop)
-        spinner.classList.add("spinner")
-        spinner.classList.add("geometry-loader")
-        document.body.appendChild(spinner)
-      };
-      manager.onLoad = () => {
-        document.body.removeChild(spinner)
-      };
-      manager.onError = () => {
-        document.body.removeChild(spinner)
-      };
+      manager.onStart = this.startSpinner
+      manager.onLoad = this.endSpinner
+      manager.onError = this.endSpinner
       let objectLoader = new THREE.ObjectLoader(manager)
       await objectLoader.load(
         file,
@@ -90,6 +80,17 @@ class DisplayManager {
     this.canvas.appendChild( this.stats.domElement )
     this.render()
     return this.scene.toJSON()
+  }
+  startSpinner() {
+    this.spinner = document.createElement('div')
+    var spinnerBackdrop = document.createElement('div')
+    this.spinner.appendChild(spinnerBackdrop)
+    this.spinner.classList.add("spinner")
+    this.spinner.classList.add("geometry-loader")
+    document.body.appendChild(this.spinner)
+  }
+  endSpinner() {
+    document.body.removeChild(this.spinner)
   }
   updateWithRawData({ data }) {
     if(data) {
