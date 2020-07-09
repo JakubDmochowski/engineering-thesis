@@ -57,7 +57,7 @@ export default {
       meta: {
         lights: true,
         hideDetector: false,
-        wireframe: false,
+        wireframe: true,
         darkMode: false,
       },
     },

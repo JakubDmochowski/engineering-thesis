@@ -11,5 +11,5 @@ setInterval(
     fs.writeFileSync('data.json', data);
     console.log(data)
   },
-  1000
+  5000
 )
