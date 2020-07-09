@@ -23,6 +23,7 @@ class DisplayManager {
     ]
     this.darkMode = meta.darkMode
     this.spinner = null
+    this.updateWorker = null
   }
   async init({ data: initData, meta }, callback = null) {
     const fov = 70
@@ -94,10 +95,10 @@ class DisplayManager {
   }
   updateWithRawData({ data }) {
     if(data) {
-      var objectsToRemove = this.scene.children.filter(c => this.typesManaged.includes(c.userData._typename))
-      this.removeMeshes(objectsToRemove)
-      this.addTracks(data.fTracks)
-      this.addClusters(data.fCaloClusters)
+      this.removeMeshes(c => this.typesManaged.includes(c.userData._typename))
+        .then(() => {
+          this.addObjects(data)
+        })
     }
     return this.scene.toJSON()
   }
@@ -107,10 +108,59 @@ class DisplayManager {
         this.renderer.setClearColor(meta.darkMode ? 0x000000 : 0xffffff, 1)
       }
     }
-    const newScene = this.objectLoader.parse(data)
-    this.removeMeshes(this.scene.children)
-    this.scene.copy(newScene)
-    newScene.dispose()
+    const oldData = this.scene.toJSON()
+
+    if(!this.updateWorker) {
+      this.updateWorker = new Worker('dataUpdateWorker.js')
+      if(typeof(this.updateWorker) !== "undefined") {
+        this.updateWorker.addEventListener("message", (event) => {
+          const diffScene = this.objectLoader.parse(event.data)
+          const diffObjectUuids = diffScene.children.map(c => c.uuid)
+          this.removeMeshes(m => diffObjectUuids.includes(m.uuid))
+            .then(() => {
+              this.addMeshes(diffScene.children)
+            })
+          diffScene.dispose()
+          this.endSpinner()
+        })
+      }
+    }
+    if(typeof(this.updateWorker) !== "undefined") {
+      this.updateWorker.postMessage({ new: data, old: oldData })
+      this.startSpinner()
+    } else {
+      console.log("sorry, your browser does not support Web Workers")
+      const newChildren = data.object.children.filter(
+        c => {
+          const co = oldData.object.children.find(co => co.uuid === c.uuid)
+          if(JSON.stringify(co) !== JSON.stringify(c)) return true
+          const cMaterial = data.materials.find(m => m.uuid === c.material)
+          const coMaterial = oldData.materials.find(m => m.uuid === co.material)
+          if(JSON.stringify(coMaterial) !== JSON.stringify(cMaterial)) return true
+          const cGeometry = data.geometries.find(m => m.uuid === c.geometry)
+          const coGeometry = oldData.geometries.find(m => m.uuid === co.geometry)
+          if(JSON.stringify(coGeometry) !== JSON.stringify(cGeometry)) return true
+          return false
+        })
+      const newGeometries = newChildren.map(c => c.geometry)
+      const newMaterials = newChildren.map(c => c.material)
+      const differenceData = {
+        object: {
+          ...data.object,
+          children: newChildren
+        },
+        geometries: data.geometries.filter(g => newGeometries.includes(g.uuid)),
+        materials: data.materials.filter(g => newMaterials.includes(g.uuid)),
+        metadata: data.metadata,
+      }
+      const diffScene = this.objectLoader.parse(differenceData)
+      const diffObjectUuids = diffScene.children.map(c => c.uuid)
+      this.removeMeshes(m => diffObjectUuids.includes(m.uuid))
+        .then(() => {
+          this.addMeshes(diffScene.children)
+        })
+      diffScene.dispose()
+    }
   }
   objectDispose(object) {
     if(object.children) {
@@ -125,13 +175,49 @@ class DisplayManager {
       object.material.dispose()
     }
   }
-  removeMeshes(meshes) {
-    if(!meshes) {
-      return
+  addMeshes(meshes) {
+    const chunksize = 64
+    if (meshes.length) {
+      return new Promise(resolve => {
+        setTimeout(
+          () => {
+            const max = Math.min(meshes.length, chunksize)
+            meshes.slice(0, max).forEach(mesh => {
+              this.scene.add(mesh)
+            })
+            setTimeout(
+              () => resolve(this.addMeshes(meshes.slice(max))),
+              0
+            )
+          },
+          0
+        )
+      })
+    } else {
+      return new Promise(resolve => resolve())
     }
-    for(var i = meshes.length - 1; i >= 0; i--) {
-      this.objectDispose(meshes[i])
-      this.scene.remove(meshes[i])
+  }
+  removeMeshes(filter = () => true) {
+    const chunksize = 64
+    const meshes = this.scene.children.filter(filter)
+    if (meshes.length) {
+      return new Promise(resolve => {
+        setTimeout(
+          () => {
+            for(var i = Math.min(meshes.length - 1, chunksize); i >= 0; i--) {
+              this.objectDispose(meshes[i])
+              this.scene.remove(meshes[i])
+            }
+            setTimeout(
+              () => resolve(this.removeMeshes(filter)),
+              0
+            )
+          },
+          0
+        )
+      })
+    } else {
+      return new Promise(resolve => resolve())
     }
   }
   download({ data, meta }) {

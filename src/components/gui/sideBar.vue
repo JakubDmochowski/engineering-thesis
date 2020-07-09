@@ -156,7 +156,7 @@ export default {
         {
           data: this.downloadData,
           meta: {
-            darkMode: this.meta.darkMode,
+            ...this.value.meta
           },
         },
       )
