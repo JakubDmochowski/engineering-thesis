@@ -232,7 +232,6 @@ class DisplayManager {
     return new Promise(resolve => resolve())
   }
   removeMeshes(nonblock, ...args) {
-    console.log(args)
     if(nonblock) {
       return this.removeMeshesNonBlock(...args)
     } else {
