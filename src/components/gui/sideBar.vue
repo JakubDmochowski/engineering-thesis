@@ -26,6 +26,24 @@
           @input="handleLightsToggle"
           :label="$tr('sidebar.filters.enable_lights')"
         />
+        <custom-toggle-switch
+          class="mt-2"
+          :value="value.meta.disableWorker"
+          @input="handleMetaInput($event, 'disableWorker')"
+          :label="$tr('sidebar.filters.disable_worker')"
+        />
+        <custom-toggle-switch
+          class="mt-2"
+          :value="value.meta.nonblock"
+          @input="handleMetaInput($event, 'nonblock')"
+          :label="$tr('sidebar.filters.nonblock')"
+        />
+        <custom-number-input
+          class="mt-2"
+          :value="value.meta.chunksize"
+          @change="handleMetaInput($event, 'chunksize')"
+          :label="$tr('sidebar.filters.chunksize')"
+        />
         <custom-range-input
           class="mt-2"
           :value="value.meta.opacity"
@@ -79,6 +97,7 @@
 import CustomToggleSwitch from '../customToggleSwitch'
 import CustomButton from '../customButton'
 import CustomRangeInput from '../customRangeInput'
+import CustomNumberInput from '../customNumberInput'
 
 export default {
   name: 'SideBar',
@@ -86,6 +105,7 @@ export default {
     CustomToggleSwitch,
     CustomButton,
     CustomRangeInput,
+    CustomNumberInput,
   },
   props: {
     value: {
@@ -116,6 +136,11 @@ export default {
         && data.data.object
         && data.data.object.children
         && data.data.object.children.filter(c => c.userData && c.userData._typename.match(typenameRegex))
+    },
+    handleMetaInput(event, field) {
+      let newValue = JSON.parse(JSON.stringify(this.value))
+      newValue.meta[field] = event
+      this.$emit('input', newValue)
     },
     handleHideDetectorToggle(event) {
       let newValue = JSON.parse(JSON.stringify(this.value))

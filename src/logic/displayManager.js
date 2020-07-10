@@ -23,6 +23,7 @@ class DisplayManager {
     ]
     this.darkMode = meta.darkMode
     this.spinner = null
+    this.spinnerCount = 0
     this.updateWorker = null
   }
   async init({ data: initData, meta }, callback = null) {
@@ -83,19 +84,28 @@ class DisplayManager {
     return this.scene.toJSON()
   }
   startSpinner() {
-    this.spinner = document.createElement('div')
-    var spinnerBackdrop = document.createElement('div')
-    this.spinner.appendChild(spinnerBackdrop)
-    this.spinner.classList.add("spinner")
-    this.spinner.classList.add("geometry-loader")
-    document.body.appendChild(this.spinner)
+    if(!this.spinner) {
+      this.spinner = document.createElement('div')
+      var spinnerBackdrop = document.createElement('div')
+      this.spinner.appendChild(spinnerBackdrop)
+      this.spinner.classList.add("spinner")
+      this.spinner.classList.add("geometry-loader")
+    }
+    if(!this.spinnerCount++) {
+      document.body.appendChild(this.spinner)
+    }
   }
   endSpinner() {
-    document.body.removeChild(this.spinner)
+    if(!--this.spinnerCount) {
+      document.body.removeChild(this.spinner)
+    }
   }
-  updateWithRawData({ data }) {
+  updateWithRawData({ data, meta }) {
     if(data) {
-      this.removeMeshes(c => this.typesManaged.includes(c.userData._typename))
+      const removeMeshesArgs = meta.nonblock
+        ? [c => this.typesManaged.includes(c.userData._typename), meta.chunksize || 64]
+        : [this.scene.children.filter(c => this.typesManaged.includes(c.userData._typename))]
+      this.removeMeshes(meta.nonblock, ...removeMeshesArgs)
         .then(() => {
           this.addObjects(data)
         })
@@ -110,22 +120,28 @@ class DisplayManager {
     }
     const oldData = this.scene.toJSON()
 
-    if(!this.updateWorker) {
+    if(!this.updateWorker && !meta.disableWorker) {
       this.updateWorker = new Worker('dataUpdateWorker.js')
       if(typeof(this.updateWorker) !== "undefined") {
         this.updateWorker.addEventListener("message", (event) => {
           const diffScene = this.objectLoader.parse(event.data)
           const diffObjectUuids = diffScene.children.map(c => c.uuid)
-          this.removeMeshes(m => diffObjectUuids.includes(m.uuid))
+          const removeMeshesArgs = meta.nonblock
+            ? [m => diffObjectUuids.includes(m.uuid), meta.chunksize || 64]
+            : [this.scene.children.filter(m => diffObjectUuids.includes(m.uuid))]
+          const addMeshesArgs = meta.nonblock
+            ? [diffScene.children, meta.chunksize || 64]
+            : [diffScene.children]
+          this.removeMeshes(meta.nonblock, ...removeMeshesArgs)
             .then(() => {
-              this.addMeshes(diffScene.children)
+              this.addMeshes(meta.nonblock, ...addMeshesArgs)
             })
           diffScene.dispose()
           this.endSpinner()
         })
       }
     }
-    if(typeof(this.updateWorker) !== "undefined") {
+    if(typeof(this.updateWorker) !== "undefined" && !meta.disableWorker) {
       this.updateWorker.postMessage({ new: data, old: oldData })
       this.startSpinner()
     } else {
@@ -155,9 +171,15 @@ class DisplayManager {
       }
       const diffScene = this.objectLoader.parse(differenceData)
       const diffObjectUuids = diffScene.children.map(c => c.uuid)
-      this.removeMeshes(m => diffObjectUuids.includes(m.uuid))
+      const removeMeshesArgs = meta.nonblock
+        ? [m => diffObjectUuids.includes(m.uuid), meta.chunksize || 64]
+        : [this.scene.children.filter(m => diffObjectUuids.includes(m.uuid))]
+      const addMeshesArgs = meta.nonblock
+        ? [diffScene.children, meta.chunksize || 64]
+        : [diffScene.children]
+      this.removeMeshes(meta.nonblock, ...removeMeshesArgs)
         .then(() => {
-          this.addMeshes(diffScene.children)
+          this.addMeshes(meta.nonblock, ...addMeshesArgs)
         })
       diffScene.dispose()
     }
@@ -175,8 +197,14 @@ class DisplayManager {
       object.material.dispose()
     }
   }
-  addMeshes(meshes) {
-    const chunksize = 64
+  addMeshes(nonblock, ...args) {
+    if(nonblock) {
+      return this.addMeshesNonBlock(...args)
+    } else {
+      return this.addMeshesBlock(...args)
+    }
+  }
+  addMeshesNonBlock(meshes, chunksize) {
     if (meshes.length) {
       return new Promise(resolve => {
         setTimeout(
@@ -186,7 +214,7 @@ class DisplayManager {
               this.scene.add(mesh)
             })
             setTimeout(
-              () => resolve(this.addMeshes(meshes.slice(max))),
+              () => resolve(this.addMeshesNonBlock(meshes.slice(max), chunksize)),
               0
             )
           },
@@ -197,8 +225,31 @@ class DisplayManager {
       return new Promise(resolve => resolve())
     }
   }
-  removeMeshes(filter = () => true) {
-    const chunksize = 64
+  addMeshesBlock(meshes) {
+    meshes.forEach(mesh => {
+      this.scene.add(mesh)
+    })
+    return new Promise(resolve => resolve())
+  }
+  removeMeshes(nonblock, ...args) {
+    console.log(args)
+    if(nonblock) {
+      return this.removeMeshesNonBlock(...args)
+    } else {
+      return this.removeMeshesBlock(...args)
+    }
+  }
+  removeMeshesBlock(meshes) {
+    if(!meshes) {
+      return 
+    }
+    for(var i = meshes.length - 1; i >= 0; i--) {
+      this.objectDispose(meshes[i])
+      this.scene.remove(meshes[i])
+    }
+    return new Promise(resolve => resolve())
+  }
+  removeMeshesNonBlock(filter = () => true, chunksize) {
     const meshes = this.scene.children.filter(filter)
     if (meshes.length) {
       return new Promise(resolve => {
@@ -209,7 +260,7 @@ class DisplayManager {
               this.scene.remove(meshes[i])
             }
             setTimeout(
-              () => resolve(this.removeMeshes(filter)),
+              () => resolve(this.removeMeshesNonBlock(filter, chunksize)),
               0
             )
           },

@@ -6,7 +6,10 @@ export default {
       enable_dark_mode: 'Enable dark mode',
       wireframe: 'Enable detector wireframe',
       enable_lights: 'Enable lights',
-      opacity: 'Detector model opacity'
+      opacity: 'Detector model opacity',
+      disable_worker: 'Disable worker',
+      chunksize: 'Chunksize',
+      nonblock: 'Non-blocking behavior',
     },
     download: {
       label: 'Screenshot',

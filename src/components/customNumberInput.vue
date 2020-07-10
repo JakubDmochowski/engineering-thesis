@@ -1,31 +1,20 @@
 <template>
   <div>
-    <label>
-      <slot></slot>
-    </label>
     <div class="flex">
       <input
+        type="number"
+        class="text-gray-700 border rounded"
+        :style="{
+          width: `${maxSize}rem`
+        }"
         :value="value"
         @input="handleInput"
         @change="handleChange"
-        type="range"
-        :min="min"
-        :max="max"
-        :step="step"
+        :min="nonNegative ? 0 : null"
       >
-      <div class="flex flex-grow ml-3 justify-center items-center">
-        <input
-          type="number"
-          :style="{
-            width: `${maxSize}rem`
-          }"
-          :value="value"
-          @input="handleInput"
-          @change="handleChange"
-          :size="maxSize"
-          :maxlength="maxSize"
-        >
-      </div>
+      <label class="ml-3">
+        {{ label }}
+      </label>
     </div>
   </div>
 </template>
@@ -36,19 +25,15 @@ export default {
   props: {
     value: {
       type: Number,
-      required: true
+      required: true,
     },
-    min: {
-      type: Number,
-      required: true
+    nonNegative: {
+      type: Boolean,
+      default: false,
     },
-    max: {
-      type: Number,
-      required: true
-    },
-    step: {
-      type: Number,
-      required: true
+    label: {
+      type: String,
+      default: "",
     },
     maxSize: {
       type: Number,

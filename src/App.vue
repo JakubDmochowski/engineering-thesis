@@ -62,6 +62,9 @@ export default {
         wireframe: true,
         darkMode: false,
         opacity: 0.05,
+        disableWorker: false,
+        chunksize: 64,
+        nonblock: true,
       },
     },
   }),
@@ -102,7 +105,7 @@ export default {
     },
     updateData(data) {
       // happens when the file data changes, the file is still in ROOT-JSON format
-      this.$refs.display.updateWithRawData({ data: JSON.parse(data) })
+      this.$refs.display.updateWithRawData({ data: JSON.parse(data), meta: this.data.meta })
       // Pseudocode: this.GUI.handleDataUpdate(data)
     },
     handleResize() {
