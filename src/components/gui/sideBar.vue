@@ -1,68 +1,75 @@
 <template>
   <div class="shadow p-4">
     <h1 v-text="$tr('sidebar.filters.label') + ':'" />
-    <div class="flex">
-      <div class="cursor-pointer inline-block">
+    <div class="flex flex-col">
+      <template v-if="value.meta">
         <custom-toggle-switch
-          v-if="value.meta"
           :value="value.meta.hideDetector"
           @input="handleHideDetectorToggle"
           :label="$tr('sidebar.filters.hide_detector')"
         />
         <custom-toggle-switch
-          v-if="value.meta"
           class="mt-2"
           :value="value.meta.wireframe"
           @input="handleWireframeDetectorToggle"
           :label="$tr('sidebar.filters.wireframe')"
         />
         <custom-toggle-switch
-          v-if="value.meta"
           class="mt-2"
           :value="value.meta.darkMode"
           @input="handleDarkModeToggle"
           :label="$tr('sidebar.filters.enable_dark_mode')"
         />
         <custom-toggle-switch
-          v-if="value.meta"
           class="mt-2"
           :value="value.meta.lights"
           @input="handleLightsToggle"
           :label="$tr('sidebar.filters.enable_lights')"
         />
-        <div class="rounded shadow p-2 mt-4">
-          <span v-text="$tr('sidebar.download.label')" />
-          <custom-toggle-switch
-            v-model="downloadData.useSVG"
-            :label="$tr('sidebar.download.use_svg')"
+        <custom-range-input
+          class="mt-2"
+          :value="value.meta.opacity"
+          @change="handleOpacityChange"
+          :min="0"
+          :max="1"
+          :step="0.005"
+          :max-size="5"
+        >
+          {{ $tr('sidebar.filters.opacity') }}
+        </custom-range-input>
+      </template>
+      <div class="rounded shadow p-2 mt-4">
+        <span v-text="$tr('sidebar.download.label')" />
+        <custom-toggle-switch
+          v-model="downloadData.useSVG"
+          :label="$tr('sidebar.download.use_svg')"
+        />
+        <custom-toggle-switch
+          v-model="downloadData.useCustomResolution"
+          :label="$tr('sidebar.download.use_custom_resolution')"
+        />
+        <div v-show="downloadData.useCustomResolution" class="mt-2 flex">
+          <input
+            v-model="downloadData.width"
+            class="block shadow rounded border py-2 px-3"
+            size="6"
+            :placeholder="$tr('sidebar.download.width_placeholder')"
           />
-          <custom-toggle-switch
-            v-model="downloadData.useCustomResolution"
-            :label="$tr('sidebar.download.use_custom_resolution')"
-          />
-          <div v-show="downloadData.useCustomResolution" class="mt-2 flex">
-            <input
-              v-model="downloadData.width"
-              class="block shadow rounded border py-2 px-3"
-              size="6"
-              :placeholder="$tr('sidebar.download.width_placeholder')"
-            />
-            <div class="mx-1 flex flex-grow justify-center items-center">
-              x
-            </div>
-            <input
-              v-model="downloadData.height"
-              class="block shadow rounded border py-2 px-3"
-              size="6"
-              :placeholder="$tr('sidebar.download.height_placeholder')"
-            />
+          <div class="mx-1 flex flex-grow justify-center items-center">
+            x
           </div>
-          <custom-button
-            class="mt-4 text-center"
-            v-text="$tr('sidebar.download.screenshot_download')"
-            @click="download"
+          <input
+            v-model="downloadData.height"
+            class="block shadow rounded border py-2 px-3"
+            size="6"
+            :placeholder="$tr('sidebar.download.height_placeholder')"
           />
         </div>
+        <custom-button
+          class="mt-4 text-center"
+          v-text="$tr('sidebar.download.screenshot_download')"
+          @click="download"
+        />
       </div>
     </div>
   </div>
@@ -71,12 +78,14 @@
 <script>
 import CustomToggleSwitch from '../customToggleSwitch'
 import CustomButton from '../customButton'
+import CustomRangeInput from '../customRangeInput'
 
 export default {
   name: 'SideBar',
   components: {
     CustomToggleSwitch,
     CustomButton,
+    CustomRangeInput,
   },
   props: {
     value: {
@@ -160,6 +169,14 @@ export default {
           },
         },
       )
+    },
+    handleOpacityChange(event) {
+      this.value.meta.opacity = event
+      let newValue = JSON.parse(JSON.stringify(this.value))
+      let geomObj = this.getObject(newValue, 'DetectorGeometry')
+      let geomMaterial = newValue.data.materials.find(m => m.uuid === geomObj.material)
+      geomMaterial.opacity = event
+      this.$emit('input', newValue)
     },
     setDarkMode(value) {
       let newValue = JSON.parse(JSON.stringify(this.value))

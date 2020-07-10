@@ -59,6 +59,7 @@ export default {
         hideDetector: false,
         wireframe: true,
         darkMode: false,
+        opacity: 0.05,
       },
     },
   }),

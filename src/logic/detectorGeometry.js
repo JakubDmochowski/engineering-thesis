@@ -6,7 +6,7 @@ class DetectorGeometry {
       layers: (l) => l.set(1),
       material: {
         transparent: true,
-        opacity: 0.05,
+        opacity: meta && meta.opacity,
         wireframe: meta && meta.wireframe,
         depthWrite: false,
       },
@@ -16,7 +16,7 @@ class DetectorGeometry {
       layers: (l) => l.set(1),
       material: {
         transparent: true,
-        opacity: 0.05,
+        opacity: meta && meta.opacity,
         wireframe: meta && meta.wireframe,
         depthWrite: false,
         emissive: new THREE.Color(0xffff00),
