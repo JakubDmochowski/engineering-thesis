@@ -40,6 +40,7 @@
         />
         <custom-number-input
           class="mt-2"
+          v-if="value.meta.nonblock"
           :value="value.meta.chunksize"
           @change="handleMetaInput($event, 'chunksize')"
           :label="$tr('sidebar.filters.chunksize')"
