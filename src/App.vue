@@ -5,6 +5,7 @@
       <div :style="{
         'height': '100vh',
         'max-width': displayWidth,
+        'min-width': displayWidth,
         'width': displayWidth,
       }">
         <display
@@ -22,7 +23,8 @@
       class="hidden lg:block"
       :style="{
         'width': desiredSideBarWidth,
-        'min-width': desiredSideBarWidth
+        'min-width': desiredSideBarWidth,
+        'max-width': desiredSideBarWidth
       }"
       :value="data"
       @input="handleInput"

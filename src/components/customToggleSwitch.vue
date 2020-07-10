@@ -1,7 +1,7 @@
 <template>
   <div @click.prevent="handleClick">
     <label class="flex items-center cursor-pointer">
-      <div class="relative">
+      <div class="relative cursor-pointer">
         <div
           class="w-10 h-4 bg-gray-300 rounded-full shadow-inner"
         />
@@ -20,7 +20,7 @@
 
 <script>
 export default {
-  name: 'Checkbox',
+  name: 'CustomToggleSwitch',
   props: {
     value: {
       type: Boolean,

@@ -12,15 +12,17 @@ onmessage = (event) => {
       if(JSON.stringify(coGeometry) !== JSON.stringify(cGeometry)) return true
       return false
     })
-  const newGeometries = newChildren.map(c => c.geometry)
-  const newMaterials = newChildren.map(c => c.material)
+  const newGeometriesUuids = newChildren.map(c => c.geometry)
+  const newMaterialUuids = newChildren.map(c => c.material)
+  const newGeometries = data.geometries.filter(g => newGeometriesUuids.includes(g.uuid))
+  const newMaterials = data.materials.filter(g => newMaterialUuids.includes(g.uuid))
   self.postMessage({
     object: {
       ...data.object,
       children: newChildren
     },
-    geometries: data.geometries.filter(g => newGeometries.includes(g.uuid)),
-    materials: data.materials.filter(g => newMaterials.includes(g.uuid)),
+    geometries: newGeometries,
+    materials: newMaterials,
     metadata: data.metadata,
   })
 }
