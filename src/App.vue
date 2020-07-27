@@ -104,9 +104,7 @@ export default {
       socket.off('initialize', this.initialize)
     },
     updateData(data) {
-      // happens when the file data changes, the file is still in ROOT-JSON format
       this.$refs.display.updateWithRawData({ data: JSON.parse(data), meta: this.data.meta })
-      // Pseudocode: this.GUI.handleDataUpdate(data)
     },
     handleResize() {
       this.currentSideBarWidth = this.$refs.sideBar.$el.clientWidth

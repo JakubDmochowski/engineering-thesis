@@ -12,18 +12,21 @@
         :min="min"
         :max="max"
         :step="step"
+        :style="{
+          width: `${sliderMaxWidth}rem`
+        }"
       >
       <div class="flex flex-grow ml-3 justify-center items-center">
         <input
           type="number"
           :style="{
-            width: `${maxSize}rem`
+            width: `${inputMaxWidth}rem`
           }"
           :value="value"
           @input="handleInput"
           @change="handleChange"
-          :size="maxSize"
-          :maxlength="maxSize"
+          :size="inputMaxWidth"
+          :maxlength="inputMaxWidth"
         >
       </div>
     </div>
@@ -50,9 +53,13 @@ export default {
       type: Number,
       required: true
     },
-    maxSize: {
+    inputMaxWidth: {
       type: Number,
       default: 5
+    },
+    sliderMaxWidth: {
+      type: Number,
+      default: 8
     },
   },
   methods: {

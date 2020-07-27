@@ -33,32 +33,39 @@ class DisplayManager {
     const far = 20000
     this.camera = new THREE.PerspectiveCamera(fov,aspect,near,far)
     this.camera.layers.enableAll();
+    this.camera.position.set( 600, 600, 1200 )
     this.objectLoader = new THREE.ObjectLoader()
 
     this.scene = new THREE.Scene()
     if(initData) {
       this.addObjects(initData)
     }
-      const file = './AliceGeometry.json'
-      var manager = new THREE.LoadingManager()
-      manager.onStart = this.startSpinner
-      manager.onLoad = this.endSpinner
-      manager.onError = this.endSpinner
-      let objectLoader = new THREE.ObjectLoader(manager)
-      await objectLoader.load(
-        file,
-        (data) => {
-          new DetectorGeometry(this.scene, { data, meta })
-          if(callback) {
-            callback(this.scene.toJSON())
-          }
-        },
-        () => {},
-        err => console.log(err)
-      )
+    const file = './AliceGeometry.json'
+    var manager = new THREE.LoadingManager()
+    manager.onStart = this.startSpinner
+    manager.onLoad = this.endSpinner
+    manager.onError = this.endSpinner
+    let objectLoader = new THREE.ObjectLoader(manager)
+    await objectLoader.load(
+      file,
+      (data) => {
+        new DetectorGeometry(this.scene, { data, meta })
+        if(callback) {
+          callback(this.scene.toJSON())
+        }
+      },
+      () => {},
+      err => console.log(err)
+    )
     var lights = {
-      ambient: new THREE.AmbientLight(this.darkMode ? 0x535300 : 0x404040, meta && meta.lights ? 1 : 0),
-      directional: new THREE.DirectionalLight(this.darkMode ? 0xffff00 : 0xffffff, meta && meta.lights ? 1 : 0)
+      ambient: new THREE.AmbientLight(
+        this.darkMode ? 0x535300 : 0x404040,
+        meta && meta.lights ? 1 : 0
+      ),
+      directional: new THREE.DirectionalLight(
+        this.darkMode ? 0xffff00 : 0xffffff,
+        meta && meta.lights ? 1 : 0
+      )
     }
     Object.values(lights).forEach(light => {
       light.userData = {
@@ -68,18 +75,20 @@ class DisplayManager {
     })
 
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
-    this.renderer.setClearColor(this.darkMode ? 0x000000 : 0xffffff, 1)
+    this.renderer.setClearColor(
+      this.darkMode ? 0x000000 : 0xffffff,
+      1
+    )
     this.renderer.setSize(
       this.canvas.clientWidth,
       this.canvas.clientHeight
     )
     this.canvas.appendChild(this.renderer.domElement)
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
-    this.camera.position.set( 600, 600, 1200 )
     this.controls.update()
     this.pickHelper = new Tooltip(this.tooltip)
     this.stats = this.createStats()
-    this.canvas.appendChild( this.stats.domElement )
+    this.canvas.appendChild(this.stats.domElement)
     this.render()
     return this.scene.toJSON()
   }
@@ -326,17 +335,15 @@ class DisplayManager {
     URL.revokeObjectURL(url)
   }
   createTrackObject(track) {
-    let tmp = []
+    let points = []
     let i = 0
     const colorMap = {
       '1': 0x00ff00,
       '-1': 0x0000ff
     }
     for(;i < track.fPolyX.length; i++) {
-      tmp.push(new THREE.Vector3(track.fPolyX[i], track.fPolyY[i], track.fPolyZ[i]))
+      points.push(new THREE.Vector3(track.fPolyX[i], track.fPolyY[i], track.fPolyZ[i]))
     }
-    var curve = new THREE.CatmullRomCurve3(tmp)
-    const points = curve.getPoints(track.fPolyX.length)
     var geometry = new THREE.BufferGeometry().setFromPoints(points)
     var material = new THREE.LineBasicMaterial({color: colorMap[track.fCharge] || 0xff0000})
 

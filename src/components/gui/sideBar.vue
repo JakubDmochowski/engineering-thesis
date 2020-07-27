@@ -52,7 +52,7 @@
           :min="0"
           :max="1"
           :step="0.005"
-          :max-size="5"
+          :input-max-width="5"
         >
           {{ $tr('sidebar.filters.opacity') }}
         </custom-range-input>
