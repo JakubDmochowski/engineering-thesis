@@ -19,7 +19,8 @@ class DisplayManager {
     this.objectLoader = null
     this.typesManaged = [
       "AliMinimalisticTrack",
-      "AliMinimalisticCaloCluster"
+      "AliMinimalisticCaloCluster",
+      "AliMinimalisticCluster",
     ]
     this.darkMode = meta.darkMode
     this.spinner = null
@@ -154,7 +155,9 @@ class DisplayManager {
       this.updateWorker.postMessage({ new: data, old: oldData })
       this.startSpinner()
     } else {
-      console.log("sorry, your browser does not support Web Workers")
+      if(typeof(this.updateWorker) === "undefined") {
+        console.log("sorry, your browser does not support Web Workers")
+      }
       const newChildren = data.object.children.filter(
         c => {
           const co = oldData.object.children.find(co => co.uuid === c.uuid)
