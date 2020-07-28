@@ -24,6 +24,7 @@ export default {
   data: () => ({
     displayManager: null,
     mounted: false,
+    skipUpdate: false,
   }),
   mounted() {
     this.displayManager = new DisplayManager(
@@ -42,7 +43,9 @@ export default {
   watch: {
     value: {
       handler(data) {
-        if(this.mounted && this.displayManager) {
+        if(this.skipUpdate) {
+          this.skipUpdate = false
+        } else if(this.mounted && this.displayManager) {
           this.displayManager.updateData(data)
         }
       },
@@ -62,6 +65,7 @@ export default {
     },
     updateWithRawData(data) {
       if(this.mounted && this.displayManager) {
+        this.skipUpdate = true
         this.$emit('input', { data: this.displayManager.updateWithRawData(data) })
       }
     },
