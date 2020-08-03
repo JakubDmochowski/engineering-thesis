@@ -39,6 +39,11 @@ import display from './components/gui/display'
 import SideBar from './components/gui/sideBar'
 import MobileMenu from './components/gui/mobileMenu'
 
+// const filename = 'event4047_run226466.json'
+
+// import uuid from 'uuid'
+// import file from '../data/event4047_run226466.json'
+
 import io from 'socket.io-client'
 
 const socket = io(process.env.VUE_APP_DATA_SOCKET_URL)
@@ -73,6 +78,21 @@ export default {
 
     socket.on('initialize', this.initialize)
     socket.on('track', this.updateData)
+
+    // const fields = ['fTracks', 'fCaloClusters', 'fClusters']
+    // fields.forEach(field => {
+    //   if(file[field]) {
+    //     file[field] = file[field].map(track => ({
+    //       ...track,
+    //       uuid: uuid()
+    //     }))
+    //   }
+    // })
+    // const formattedFile = JSON.stringify(file)
+    //   .replace(/\{/g, "{\n")
+    //   .replace(/\[/g, "[\n")
+    //   .replace(/,/g, ",\n")
+    // this.download(formattedFile, filename, 'text/plain');
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.handleResize)
@@ -89,6 +109,13 @@ export default {
     },
   },
   methods: {
+    // download(content, fileName, contentType) {
+    //     var a = document.createElement("a");
+    //     var file = new Blob([content], {type: contentType});
+    //     a.href = URL.createObjectURL(file);
+    //     a.download = fileName;
+    //     a.click();
+    // },
     handleInput(data) {
       this.$set(
         this,
@@ -104,7 +131,8 @@ export default {
       socket.off('initialize', this.initialize)
     },
     updateData(data) {
-      this.$refs.display.updateWithRawData({ data: JSON.parse(data), meta: this.data.meta })
+      const startTime = new Date().getTime()
+      this.$refs.display.updateWithRawData({ data: JSON.parse(data), meta: this.data.meta }, startTime)
     },
     handleResize() {
       this.currentSideBarWidth = this.$refs.sideBar.$el.clientWidth

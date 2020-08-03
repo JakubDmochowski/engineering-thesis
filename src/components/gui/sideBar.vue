@@ -124,8 +124,33 @@ export default {
   }),
   created() {
     this.setDarkMode(this.value.meta.darkMode)
+    setTimeout(() => {
+      this.changeRandomOptionIn(10000)
+    }, 10000)
   },
   methods: {
+    changeRandomOptionIn(interval) {
+      setTimeout(() => {
+        const options = [
+          "handleHideDetectorToggle",
+          "handleLightsToggle",
+          "handleWireframeDetectorToggle",
+          "handleDarkModeToggle",
+          "handleOpacityChange",
+        ]
+        const optionMap = {
+          "handleHideDetectorToggle": "hideDetector",
+          "handleLightsToggle": "lights",
+          "handleWireframeDetectorToggle": "wireframe",
+          "handleDarkModeToggle": "darkMode",
+          "handleOpacityChange": "opacity",
+        }
+        const optionIndexChosen = Math.floor(Math.random() * options.length)
+        const value = options[optionIndexChosen] !== 'handleOpacityChange' ? !this.value.meta[optionMap[options[optionIndexChosen]]] : Math.random()
+        this[options[optionIndexChosen]](value)
+        this.changeRandomOptionIn(interval)
+      }, interval)
+    },
     getObject(data, typename) {
       return data.data
         && data.data.object

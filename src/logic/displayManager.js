@@ -5,6 +5,9 @@ import Tooltip from './tooltip'
 import DetectorGeometry from './detectorGeometry'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
 
+const tests_filename = 'performance.csv'
+let fileData = ""
+
 class DisplayManager {
   constructor(canvas = null, tooltip = null, { meta }) {
     this.camera =  null
@@ -26,6 +29,7 @@ class DisplayManager {
     this.spinner = null
     this.spinnerCount = 0
     this.updateWorker = null
+    this.startTime = 0
   }
   async init({ data: initData, meta }, callback = null) {
     const fov = 70
@@ -91,7 +95,24 @@ class DisplayManager {
     this.stats = this.createStats()
     this.canvas.appendChild(this.stats.domElement)
     this.render()
+
+    const fileStart = `Number of existing objects;Number of objects added;Number of objects removed;Updated in\n`
+    const timeGatheringTests = 1000*60*2
+    fileData = fileStart
+    setTimeout(() => {
+      this.downloadTestData()
+    }, timeGatheringTests)
     return this.scene.toJSON()
+  }
+  downloadTestData() {
+    this.downloadTests(fileData, tests_filename, 'text/plain')
+  }
+  downloadTests(content, fileName, contentType) {
+    var a = document.createElement("a");
+    var file = new Blob([content], {type: contentType});
+    a.href = URL.createObjectURL(file);
+    a.download = fileName;
+    a.click();
   }
   startSpinner() {
     if(!this.spinner) {
@@ -110,19 +131,38 @@ class DisplayManager {
       document.body.removeChild(this.spinner)
     }
   }
-  updateWithRawData({ data, meta }) {
+  updateWithRawData({ data, meta }, startTime) {
+    let testRecord = ""
+    this.startSpinner()
     if(data) {
+      // testRecord = `${this.scene.children.length}`
+      // console.log("Number of objects before update:", this.scene.children.length)
       const removeMeshesArgs = meta.nonblock
         ? [c => this.typesManaged.includes(c.userData._typename), meta.chunksize || 64]
         : [this.scene.children.filter(c => this.typesManaged.includes(c.userData._typename))]
+        
+        testRecord = `${(data.fClusters || []).length + (data.fTracks || []).length + (data.fCaloClusters || []).length};${this.scene.children.filter(c => this.typesManaged.includes(c.userData._typename)).length}`
+        // console.log("Number of objects added:", (data.fClusters || []).length + (data.fTracks || []).length + (data.fCaloClusters || []).length)
+        // console.log("Number of objects removed:", this.scene.children.filter(c => this.typesManaged.includes(c.userData._typename)).length)
       this.removeMeshes(meta.nonblock, ...removeMeshesArgs)
         .then(() => {
           this.addObjects(data)
+          testRecord = `${testRecord};${new Date().getTime() - startTime}\n`
+          // console.log("Number of objects after update:", this.scene.children.length)
+          // console.log(`Updated in: ${new Date().getTime() - startTime}ms`)
+          fileData = fileData.concat(testRecord)
+          this.endSpinner()
         })
     }
     return this.scene.toJSON()
   }
+  addTestRecord(value, endTime) {
+    fileData = fileData.concat(`${value};${endTime - this.startTime}\n`)
+    this.startTime = 0
+  }
   updateData({ data, meta }) {
+    this.startTime = new Date().getTime()
+    let testRecord = ""
     if(meta) {
       if(typeof meta.darkMode === 'boolean') {
         this.renderer.setClearColor(meta.darkMode ? 0x000000 : 0xffffff, 1)
@@ -136,6 +176,7 @@ class DisplayManager {
         this.updateWorker.addEventListener("message", (event) => {
           const diffScene = this.objectLoader.parse(event.data)
           const diffObjectUuids = diffScene.children.map(c => c.uuid)
+          testRecord = `${this.scene.children.length};${diffScene.children.length};${this.scene.children.filter(m => diffObjectUuids.includes(m.uuid)).length}`
           const removeMeshesArgs = meta.nonblock
             ? [m => diffObjectUuids.includes(m.uuid), meta.chunksize || 64]
             : [this.scene.children.filter(m => diffObjectUuids.includes(m.uuid))]
@@ -145,6 +186,7 @@ class DisplayManager {
           this.removeMeshes(meta.nonblock, ...removeMeshesArgs)
             .then(() => {
               this.addMeshes(meta.nonblock, ...addMeshesArgs)
+              this.addTestRecord(testRecord, new Date().getTime())
             })
           diffScene.dispose()
           this.endSpinner()
@@ -183,6 +225,7 @@ class DisplayManager {
       }
       const diffScene = this.objectLoader.parse(differenceData)
       const diffObjectUuids = diffScene.children.map(c => c.uuid)
+      testRecord = `${this.scene.children.length};${diffScene.children.length};${this.scene.children.filter(m => diffObjectUuids.includes(m.uuid)).length}`
       const removeMeshesArgs = meta.nonblock
         ? [m => diffObjectUuids.includes(m.uuid), meta.chunksize || 64]
         : [this.scene.children.filter(m => diffObjectUuids.includes(m.uuid))]
@@ -192,6 +235,7 @@ class DisplayManager {
       this.removeMeshes(meta.nonblock, ...removeMeshesArgs)
         .then(() => {
           this.addMeshes(meta.nonblock, ...addMeshesArgs)
+          this.addTestRecord(testRecord, new Date().getTime())
         })
       diffScene.dispose()
     }
