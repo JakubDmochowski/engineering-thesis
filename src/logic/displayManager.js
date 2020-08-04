@@ -26,15 +26,16 @@ class DisplayManager {
     this.spinner = null
     this.spinnerCount = 0
     this.updateWorker = null
+    this.infobox = null
   }
   async init({ data: initData, meta }, callback = null) {
-    const fov = 70
+    const fov = 90
     const aspect = this.canvas.clientWidth / this.canvas.clientHeight
-    const near = 0.1
+    const near = 1.95
     const far = 20000
     this.camera = new THREE.PerspectiveCamera(fov,aspect,near,far)
     this.camera.layers.enableAll();
-    this.camera.position.set( 600, 600, 1200 )
+    this.camera.position.set( 450, 450, 900 )
     this.objectLoader = new THREE.ObjectLoader()
 
     this.scene = new THREE.Scene()
@@ -74,7 +75,14 @@ class DisplayManager {
       }
       this.scene.add(light)
     })
-
+    var infoboxMaterial = new THREE.MeshBasicMaterial({ color: 0xdddddd })
+    var infoboxBackground = new THREE.PlaneGeometry(1, 1, 1, 1)
+    this.infobox = new THREE.Mesh(infoboxBackground, infoboxMaterial)
+    this.infobox.userData = {
+      _typename: 'Infobox',
+    }
+    this.addInfoboxText('Hello World after every human throught')
+    this.scene.add(this.infobox)
     this.renderer = new THREE.WebGLRenderer({ antialias: true })
     this.renderer.setClearColor(
       this.darkMode ? 0x000000 : 0xffffff,
@@ -92,6 +100,102 @@ class DisplayManager {
     this.canvas.appendChild(this.stats.domElement)
     this.render()
     return this.scene.toJSON()
+  }
+  addInfoboxText(message) {
+    var loader = new THREE.FontLoader();
+    loader.load( 'fonts/helvetiker_regular.typeface.json', ( font ) => {
+      var xMid, text;
+      var color = 0x006699;
+      var matDark = new THREE.LineBasicMaterial( {
+        color: color,
+        side: THREE.DoubleSide
+      } );
+      var matLite = new THREE.MeshBasicMaterial( {
+        color: color,
+        transparent: true,
+        opacity: 0.4,
+        side: THREE.DoubleSide
+      } );
+      var shapes = font.generateShapes( message, 100 );
+      let geometry = new THREE.ShapeBufferGeometry( shapes );
+      geometry.computeBoundingBox();
+      xMid = - 0.5 * ( geometry.boundingBox.max.x - geometry.boundingBox.min.x );
+      geometry.translate( xMid, 0, 0 );
+      geometry.scale(0.001, 0.001, 0.001)
+      // make shape ( N.B. edge view not visible )
+      text = new THREE.Mesh( geometry, matLite );
+      // make line shape ( N.B. edge view remains visible )
+      var holeShapes = [];
+      for ( var i = 0; i < shapes.length; i ++ ) {
+        let shape = shapes[ i ];
+        if ( shape.holes && shape.holes.length > 0 ) {
+          for ( var j = 0; j < shape.holes.length; j ++ ) {
+            var hole = shape.holes[ j ];
+            holeShapes.push( hole );
+          }
+        }
+      }
+      shapes.push.apply( shapes, holeShapes );
+      var lineText = new THREE.Object3D();
+      for ( let i = 0; i < shapes.length; i ++ ) {
+        let shape = shapes[ i ];
+        var points = shape.getPoints();
+        let geometry = new THREE.BufferGeometry().setFromPoints( points );
+        geometry.translate( xMid, 0, 0 );
+        geometry.scale(0.001, 0.001, 0.001)
+        var lineMesh = new THREE.Line( geometry, matDark );
+        lineText.add( lineMesh );
+      }
+      if(this.infobox.children.length) {
+        this.removeMeshes(false, this.infobox.children)
+      }
+      this.infobox.add( text )
+      this.infobox.add( lineText )
+    } )
+  }
+  async adjustInfobox() {
+    const infoboxDistanceFromCamera = 2
+    const infoboxAspectRatio = 16 / 9
+    const infoboxHeight = 0.75
+    const infoboxWidth = infoboxAspectRatio * infoboxHeight
+    this.infobox.scale = new THREE.Vector3(infoboxWidth, infoboxHeight, 1)
+    let newPosition = this.camera.position.clone()
+
+    let cameraDirection = new THREE.Vector3()
+    this.camera.getWorldDirection(cameraDirection)
+    cameraDirection.multiplyScalar(infoboxDistanceFromCamera)
+    newPosition.add(cameraDirection)
+    cameraDirection.multiplyScalar(1/infoboxDistanceFromCamera)
+
+    const rightDisplacementCoefficient = -(((2 * infoboxDistanceFromCamera) * this.camera.aspect / 2) - (1/2 * infoboxWidth))
+    const upDisplacementCoefficient = -((((2*infoboxDistanceFromCamera) / infoboxHeight) - 1)/2)*infoboxHeight
+    this.displaceWrtCamera(
+      newPosition,
+      {
+        up: upDisplacementCoefficient,
+        right: rightDisplacementCoefficient
+      }
+    )
+    this.infobox.position = newPosition
+
+    let cameraOrientation = this.camera.quaternion.clone()
+    this.infobox.setRotationFromQuaternion(cameraOrientation)
+  }
+  displaceWrtCamera(position, displacement) {
+    const { up, right } = displacement
+    let displ = new THREE.Vector3()
+    this.camera.getWorldDirection(displ)
+    displ.cross(this.camera.up)
+    displ.normalize()
+    displ.multiplyScalar(right)
+    position.add(displ)
+    displ.multiplyScalar(1/right)
+    let cameraDirection = new THREE.Vector3()
+    this.camera.getWorldDirection(cameraDirection)
+    displ.cross(cameraDirection)
+    displ.normalize()
+    displ.multiplyScalar(up)
+    position.add(displ)
   }
   startSpinner() {
     if(!this.spinner) {
@@ -401,6 +505,7 @@ class DisplayManager {
     const canvas = this.renderer.domElement
     this.camera.aspect = canvas.clientWidth / canvas.clientHeight
     this.camera.updateProjectionMatrix()
+    this.adjustInfobox()
   }
   render(time) {
     this.scene.children
@@ -409,6 +514,7 @@ class DisplayManager {
         mesh.userData.onRender(time)
       })
 
+    this.adjustInfobox()
     this.renderer.render(this.scene, this.camera)
     this.controls.update()
     this.stats.update();
