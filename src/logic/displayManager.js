@@ -30,6 +30,7 @@ class DisplayManager {
       object: null,
       distanceFromCamera: 2,
       aspectRatio: 16 / 9,
+      requestedHeight: 100, //in pixels
       height: null,
       width: null,
     }
@@ -47,6 +48,7 @@ class DisplayManager {
     this.scene = new THREE.Scene()
     if(initData) {
       this.addObjects(initData)
+      this.addInfoboxText(`run: ${initData.fRunID}\nevent: ${initData.fEventID}`)
     }
     const file = './AliceGeometry.json'
     var manager = new THREE.LoadingManager()
@@ -98,7 +100,6 @@ class DisplayManager {
     )
     this.scene.add(this.infobox.object)
     this.adjustInfobox()
-    this.addInfoboxText('Hello World')
     this.canvas.appendChild(this.renderer.domElement)
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
     this.controls.update()
@@ -109,6 +110,13 @@ class DisplayManager {
     return this.scene.toJSON()
   }
   addInfoboxText(message) {
+    const currentMessage = this.infobox.object
+      && this.infobox.object.children
+      && this.infobox.object.children.find(c => c.userData._typename === 'InfoboxText')
+    if(currentMessage) {
+      this.objectDispose(currentMessage)
+      this.infobox.object.remove(currentMessage)
+    }
     var loader = new THREE.FontLoader();
     loader.load( 'fonts/helvetiker_regular.typeface.json', ( font ) => {
       var text;
@@ -124,11 +132,16 @@ class DisplayManager {
         side: THREE.DoubleSide
       } );
       var shapes = font.generateShapes( message, 100 );
+      var exampleShape = font.generateShapes("Text", 100)
       let geometry = new THREE.ShapeBufferGeometry( shapes );
+      let exampleTextGeometry = new THREE.ShapeBufferGeometry(exampleShape)
       geometry.computeBoundingBox();
-      geometry.scale(0.00075, 0.00075, 1)
-      // var infoboxBoundaries = new THREE.Box3().setFromObject(this.infobox)
-      // console.log(infoboxBoundaries.min, infoboxBoundaries.max, infoboxBoundaries.getSize())
+      exampleTextGeometry.computeBoundingBox()
+      const fontSize = this.getFontSize()
+      const currentFontSize = exampleTextGeometry.boundingBox.max.y - exampleTextGeometry.boundingBox.min.y
+      const screenheight = 2*this.infobox.distanceFromCamera*(Math.tan(this.camera.fov / 360 * Math.PI))
+      let fontScale = (screenheight / this.canvas.clientHeight) * (fontSize / currentFontSize)
+      geometry.scale(fontScale, fontScale, 1)
       text = new THREE.Mesh( geometry, matLite );
       // make shape ( N.B. edge view not visible )
       // make line shape ( N.B. edge view remains visible )
@@ -148,7 +161,7 @@ class DisplayManager {
         let shape = shapes[ i ];
         var points = shape.getPoints();
         let geometry = new THREE.BufferGeometry().setFromPoints( points );
-        geometry.scale(0.00075, 0.00075, 1)
+        geometry.scale(fontScale, fontScale, 1)
         var lineMesh = new THREE.Line( geometry, matDark );
         lineText.add( lineMesh );
       }
@@ -162,16 +175,31 @@ class DisplayManager {
       mesh.add(text)
       mesh.add(lineText)
       this.infobox.object.add(mesh)
-      mesh.translateX(-this.infobox.width / 2)
-      // mesh.translateY(this.infobox.height/2)
-      // mesh.translateY(this.infobox.height / 2)
-      // mesh.translateZ(0.04)
-      console.log(this.infobox)
+      const displacement = this.moveOnDisplayInPixels([fontSize, -fontSize * 3/2])
+      mesh.translateX(-0.5 + displacement.x)
+      mesh.translateY(0.5 + displacement.y)
+      mesh.translateZ(0.04)
+      mesh.scale = new THREE.Vector3(1/this.infobox.aspectRatio, 1, 1)
     } )
+  }
+  moveOnDisplayInPixels(displacement) {
+    const [x, y] = displacement
+    const screenheight = 2*this.infobox.distanceFromCamera*(Math.tan(this.camera.fov / 360 * Math.PI))
+    const screenAspectRatio = this.canvas.clientWidth / this.canvas.clientHeight
+    const screenwidth = (screenheight * screenAspectRatio)
+    const yPixel = screenheight / this.canvas.clientHeight
+    const xPixel = screenwidth / this.canvas.clientWidth
+    return new THREE.Vector3(xPixel * x, yPixel * y, 1)
+  }
+  getFontSize() {
+    var el = document.querySelector("body")
+    var style = window.getComputedStyle(el, null).getPropertyValue('font-size')
+    var fontSize = parseFloat(style)
+    return fontSize
   }
   async adjustInfobox() {
     const screenheight = 2*this.infobox.distanceFromCamera*(Math.tan(this.camera.fov / 360 * Math.PI))
-    this.infobox.height = screenheight * (15/100)
+    this.infobox.height = this.infobox.requestedHeight / this.canvas.clientHeight * screenheight
     this.infobox.width = this.infobox.aspectRatio * this.infobox.height
     this.infobox.object.scale = new THREE.Vector3(this.infobox.width, this.infobox.height, 1)
     let newPosition = this.camera.position.clone()
@@ -237,6 +265,7 @@ class DisplayManager {
       this.removeMeshes(meta.nonblock, ...removeMeshesArgs)
         .then(() => {
           this.addObjects(data)
+          this.addInfoboxText(`run: ${data.fRunID}\nevent: ${data.fEventID}`)
         })
     }
     return this.scene.toJSON()
