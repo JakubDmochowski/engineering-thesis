@@ -9,7 +9,7 @@ export default {
       opacity: 'Detector model opacity',
       disable_worker: 'Disable worker',
       chunksize: 'Chunksize',
-      nonblock: 'Non-blocking behavior',
+      nonblock: 'Non-blocking behaviour',
     },
     download: {
       label: 'Screenshot',
