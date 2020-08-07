@@ -17,11 +17,14 @@ class DisplayManager {
     this.canvas = canvas
     this.tooltip = tooltip
     this.objectLoader = null
-    this.typesManaged = [
-      "AliMinimalisticTrack",
-      "AliMinimalisticCaloCluster",
-      "AliMinimalisticCluster",
-    ]
+    this.dataTypes = {
+      static: ["Infobox"],
+      dynamic: [
+        "AliMinimalisticTrack",
+        "AliMinimalisticCaloCluster",
+        "AliMinimalisticCluster",
+      ]
+    }
     this.darkMode = meta.darkMode
     this.spinner = null
     this.spinnerCount = 0
@@ -286,8 +289,8 @@ class DisplayManager {
           const diffScene = this.objectLoader.parse(event.data)
           const diffObjectUuids = diffScene.children.map(c => c.uuid)
           const removeMeshesArgs = meta.nonblock
-            ? [m => diffObjectUuids.includes(m.uuid), meta.chunksize || 64]
-            : [this.scene.children.filter(m => diffObjectUuids.includes(m.uuid))]
+            ? [m => diffObjectUuids.includes(m.uuid) && !this.dataTypes.static.includes(m.userData._typename), meta.chunksize || 64]
+            : [this.scene.children.filter(m => diffObjectUuids.includes(m.uuid) && !this.dataTypes.static.includes(m.userData._typename))]
           const addMeshesArgs = meta.nonblock
             ? [diffScene.children, meta.chunksize || 64]
             : [diffScene.children]
