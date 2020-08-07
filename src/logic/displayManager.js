@@ -175,9 +175,8 @@ class DisplayManager {
       mesh.add(text)
       mesh.add(lineText)
       this.infobox.object.add(mesh)
-      const displacement = this.moveOnDisplayInPixels([fontSize, -fontSize * 3/2])
-      mesh.translateX(-0.5 + displacement.x)
-      mesh.translateY(0.5 + displacement.y)
+      mesh.translateX(-0.5 + fontSize / this.infobox.requestedHeight)
+      mesh.translateY(0.5 - fontSize / this.infobox.requestedHeight * this.infobox.aspectRatio)
       mesh.translateZ(0.04)
       mesh.scale = new THREE.Vector3(1/this.infobox.aspectRatio, 1, 1)
     } )
@@ -185,10 +184,9 @@ class DisplayManager {
   moveOnDisplayInPixels(displacement) {
     const [x, y] = displacement
     const screenheight = 2*this.infobox.distanceFromCamera*(Math.tan(this.camera.fov / 360 * Math.PI))
-    const screenAspectRatio = this.canvas.clientWidth / this.canvas.clientHeight
-    const screenwidth = (screenheight * screenAspectRatio)
-    const yPixel = screenheight / this.canvas.clientHeight
+    const screenwidth = (screenheight * this.camera.aspect)
     const xPixel = screenwidth / this.canvas.clientWidth
+    const yPixel = screenheight / this.canvas.clientHeight
     return new THREE.Vector3(xPixel * x, yPixel * y, 1)
   }
   getFontSize() {
@@ -200,7 +198,7 @@ class DisplayManager {
   async adjustInfobox() {
     const screenheight = 2*this.infobox.distanceFromCamera*(Math.tan(this.camera.fov / 360 * Math.PI))
     this.infobox.height = this.infobox.requestedHeight / this.canvas.clientHeight * screenheight
-    this.infobox.width = this.infobox.aspectRatio * this.infobox.height
+    this.infobox.width = this.infobox.height * this.infobox.aspectRatio
     this.infobox.object.scale = new THREE.Vector3(this.infobox.width, this.infobox.height, 1)
     let newPosition = this.camera.position.clone()
 
