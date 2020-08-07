@@ -1,0 +1,19 @@
+{
+  "_typename":"AliMinimalisticEvent",
+  "fUniqueID":0,
+  "fBits":33554432,
+  "fEventID":183148544,
+  "fRunID": 226466,
+  "fEnergy":6500,
+  "fMultiplicity":0,
+  "fCollidingSystem":"p-p",
+  "fTimeStamp":1434151054,
+  "fTracks":[
+  ],
+  "fClusters":[
+
+  ],
+  "fCaloClusters": [
+
+  ]
+}
