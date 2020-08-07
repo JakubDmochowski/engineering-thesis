@@ -210,8 +210,8 @@ class DisplayManager {
     newPosition.add(cameraDirection)
     cameraDirection.multiplyScalar(1/this.infobox.distanceFromCamera)
 
-    const rightDisplacementCoefficient = -(((2 * this.infobox.distanceFromCamera) * this.camera.aspect / 2) - (1/2 * this.infobox.width))
-    const upDisplacementCoefficient = -((((2*this.infobox.distanceFromCamera) / this.infobox.height) - 1)/2)*this.infobox.height
+    const rightDisplacementCoefficient = -(this.infobox.distanceFromCamera * this.camera.aspect - this.infobox.width / 2)
+    const upDisplacementCoefficient = -((((2*this.infobox.distanceFromCamera) / this.infobox.height) - 1)/2) * this.infobox.height
     this.displaceWrtCamera(
       newPosition,
       {
