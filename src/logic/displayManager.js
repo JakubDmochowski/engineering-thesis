@@ -257,15 +257,18 @@ class DisplayManager {
       document.body.removeChild(this.spinner)
     }
   }
-  updateWithRawData({ data, meta }) {
+  updateWithRawData({ data, meta }, startTime) {
+    this.startSpinner()
     if(data) {
       const removeMeshesArgs = meta.nonblock
-        ? [c => this.typesManaged.includes(c.userData._typename), meta.chunksize || 64]
-        : [this.scene.children.filter(c => this.typesManaged.includes(c.userData._typename))]
+        ? [c => this.dataTypes.dynamic.includes(c.userData._typename), meta.chunksize || 64]
+        : [this.scene.children.filter(c => this.dataTypes.dynamic.includes(c.userData._typename))]
       this.removeMeshes(meta.nonblock, ...removeMeshesArgs)
         .then(() => {
           this.addObjects(data)
           this.addInfoboxText(`run: ${data.fRunID}\nevent: ${data.fEventID}`)
+          console.log(`updatedIn: ${new Date().getTime() - startTime}ms`)
+          this.endSpinner()
         })
     }
     return this.scene.toJSON()

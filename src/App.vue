@@ -103,8 +103,9 @@ export default {
       this.$refs.display.init({ data: JSON.parse(data), meta: this.data.meta })
       socket.off('initialize', this.initialize)
     },
-    updateData(data) {
-      this.$refs.display.updateWithRawData({ data: JSON.parse(data), meta: this.data.meta })
+    updateData(data) { 
+      const startTime = new Date().getTime()
+      this.$refs.display.updateWithRawData({ data: JSON.parse(data), meta: this.data.meta }, startTime)
     },
     handleResize() {
       this.currentSideBarWidth = this.$refs.sideBar.$el.clientWidth

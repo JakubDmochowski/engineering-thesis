@@ -63,10 +63,10 @@ export default {
           this.$emit('input', { data: response })
         })
     },
-    updateWithRawData(data) {
+    updateWithRawData(...args) {
       if(this.mounted && this.displayManager) {
         this.skipUpdate = true
-        this.$emit('input', { data: this.displayManager.updateWithRawData(data) })
+        this.$emit('input', { data: this.displayManager.updateWithRawData(...args) })
       }
     },
     download(data) {
