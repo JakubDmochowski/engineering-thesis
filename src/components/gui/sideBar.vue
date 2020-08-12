@@ -95,10 +95,10 @@
 </template>
 
 <script>
-import CustomToggleSwitch from '../customToggleSwitch'
-import CustomButton from '../customButton'
-import CustomRangeInput from '../customRangeInput'
-import CustomNumberInput from '../customNumberInput'
+import CustomToggleSwitch from '../local/customToggleSwitch'
+import CustomButton from '../local/customButton'
+import CustomRangeInput from '../local/customRangeInput'
+import CustomNumberInput from '../local/customNumberInput'
 
 export default {
   name: 'SideBar',
