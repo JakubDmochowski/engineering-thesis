@@ -3,7 +3,7 @@ const fs = require('fs')
 const uuid = require('uuid')
 let template = JSON.parse(fs.readFileSync('testGeneratorTemplate.json'))
 
-let dataSampleSizes = [1,2,5,10,20,50,100,200,500,1000,2000,5000,10000]
+let dataSampleSizes = [1,2,5,10,20,50,100,200,500,1000,1500,2000,2500,3000,4000,5000,6000]
 
 const pickCasesFromArray = (data, numberOfElems) => {
   let tmp = JSON.parse(JSON.stringify(data))
