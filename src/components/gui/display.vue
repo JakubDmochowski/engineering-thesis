@@ -1,7 +1,11 @@
 <template>
   <div ref="display" class="display relative">
-    <div id="tooltip" ref="tooltip">
-      asdf
+    <div id="tooltip" ref="tooltip" @click.stop="handleTooltipClick">
+      <div class="wrapper">
+        <!-- eslint-disable vue/no-v-html -->
+        <span class="text-xs" v-if="tooltipText" v-html="tooltipText" />
+        <!-- eslint-enable vue/no-v-html -->
+      </div>
       <div id="arrow" data-popper-arrow></div>
     </div>
   </div>
@@ -25,6 +29,7 @@ export default {
     displayManager: null,
     mounted: false,
     skipUpdate: false,
+    tooltipText: '',
   }),
   mounted() {
     this.displayManager = new DisplayManager(
@@ -33,12 +38,12 @@ export default {
       this.value
     )
     window.addEventListener('resize', this.handleResize)
-    window.addEventListener('click', this.displayManager.handleClick.bind(this.displayManager))
+    window.addEventListener('click', this.handleClick)
     this.mounted = true
   },
   beforeDestroy() {
     window.removeEventListener('resize', this.handleResize)
-    window.removeEventListener('click', this.displayManager.handleClick.bind(this.displayManager))
+    window.removeEventListener('click', this.handleClick)
   },
   watch: {
     value: {
@@ -53,6 +58,13 @@ export default {
     }
   },
   methods: {
+    handleTooltipClick(event) {
+      event.preventDefault()
+    },
+    handleClick(event) {
+      this.intersectingObjects = this.displayManager.handleClick.bind(this.displayManager)(event)
+      this.tooltipText = this.intersectingObjects && this.intersectingObjects.map((entry) => `${entry.object.userData._typename}: ${entry.object.uuid}`).join('<br>')
+    },
     init(data) {
       const onGeometryLoaded = (response) => {
         this.$emit('input', { data: response })
@@ -90,5 +102,9 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
+.wrapper {
+  max-height: 15rem;
+  @apply overflow-auto;
+}
 </style>

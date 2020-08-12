@@ -57,8 +57,11 @@ class PickHelper {
       // pick the first object. It's the closest one
       this.onPickStart(intersectedObjects[0].object)
       this.showTooltip()
+      console.log(intersectedObjects)
+      return intersectedObjects
     } else {
       this.hideTooltip()
+      return null
     }
   }
   showTooltip() {

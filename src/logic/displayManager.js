@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { SVGRenderer } from 'three/examples/jsm/renderers/SVGRenderer'
-import Tooltip from './tooltip'
+import PickHelper from './PickHelper'
 import DetectorGeometry from './detectorGeometry'
 import Stats from 'three/examples/jsm/libs/stats.module.js'
 
@@ -106,7 +106,7 @@ class DisplayManager {
     this.canvas.appendChild(this.renderer.domElement)
     this.controls = new OrbitControls(this.camera, this.renderer.domElement)
     this.controls.update()
-    this.pickHelper = new Tooltip(this.tooltip)
+    this.pickHelper = new PickHelper(this.tooltip)
     this.stats = this.createStats()
     this.canvas.appendChild(this.stats.domElement)
     this.render()
@@ -546,8 +546,8 @@ class DisplayManager {
 
     return stats
   }
-  handleClick() {
-    this.pickHelper.pick(event, this.renderer.domElement, this.scene, this.camera)
+  handleClick(event) {
+    return this.pickHelper.pick(event, this.renderer.domElement, this.scene, this.camera)
   }
   handleResize() {
     const canvas = this.renderer.domElement
